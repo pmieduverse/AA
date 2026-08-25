@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guild News Board | Adventurer Association</title>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --card-bg: #161b22;
+      --border-color: #30363d;
+      --gold: #f59e0b;
+      --gold-hover: #d97706;
+      --red-alert: #ef4444;
+      --blue-info: #3b82f6;
+      --green-event: #10b981;
+      --text-main: #e6edf3;
+      --text-muted: #8b949e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- NAVBAR --- */
+    .navbar {
+      background: #11151c;
+      border-bottom: 2px solid var(--gold);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 20px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-main);
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--gold);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    /* --- CONTAINER --- */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      flex: 1;
+    }
+
+    .header-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header-section h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 2.5rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+    }
+
+    .header-section p {
+      color: var(--text-muted);
+    }
+
+    /* --- STATS BAR --- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .stat-card i {
+      font-size: 2rem;
+      color: var(--gold);
+    }
+
+    /* --- CONTROLS BAR (Search & Add) --- */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .search-filter {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      min-width: 280px;
+    }
+
+    input, select, textarea {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.6rem 1rem;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--gold);
+    }
+
+    .btn {
+      background: var(--gold);
+      color: #000;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--gold-hover);
+      color: #fff;
+    }
+
+    .btn-danger { background: var(--red-alert); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* --- NEWS GRID & CARDS --- */
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .news-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .news-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .badge-emergency { background: rgba(239, 68, 68, 0.2); color: var(--red-alert); border: 1px solid var(--red-alert); }
+    .badge-event { background: rgba(16, 185, 129, 0.2); color: var(--green-event); border: 1px solid var(--green-event); }
+    .badge-quest { background: rgba(59, 130, 246, 0.2); color: var(--blue-info); border: 1px solid var(--blue-info); }
+    .badge-notice { background: rgba(245, 158, 11, 0.2); color: var(--gold); border: 1px solid var(--gold); }
+
+    .news-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-family: 'Cinzel', serif;
+    }
+
+    .news-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .news-content {
+      font-size: 0.95rem;
+      color: #c9d1d9;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.8rem;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+
+    .action-btn:hover { color: var(--gold); }
+    .action-btn.delete:hover { color: var(--red-alert); }
+
+    /* --- MODAL (POPUP FORM) --- */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      width: 90%;
+      max-width: 550px;
+      padding: 2rem;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 { font-family: 'Cinzel', serif; color: var(--gold); }
+
+    .form-group {
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    /* --- FOOTER --- */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION BAR -->
+  <nav class="navbar">
+    <a href="index.html" class="brand">
+      <i class="fa-solid fa-shield-halved"></i> Guild HQ
+    </a>
+    <ul class="nav-links">
+      <li><a href="https://pmieduverse.github.io/AA/">Home</a></li>
+      <li><a href="https://pmieduverse.github.io/AA/guild.html">gulid</a></li>
+      <li><a href="https://pmieduverse.github.io/AA/news.html" class="active">News Board</a></li>
+    </ul>
+  </nav>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <div class="container">
+    <div class="header-section">
+      <h1>Guild Bulletin & News Board</h1>
+      <p>Official Announcements, Monster Sightings & Association Directives</p>
+    </div>
+
+    <!-- STATS OVERVIEW -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <i class="fa-solid fa-scroll"></i>
+        <div>
+          <h3 id="totalNews">0</h3>
+          <small>Total Notices</small>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-triangle-exclamation" style="color: var(--red-alert);"></i>
+        <div>
+          <h3 id="emergencyCount">0</h3>
+          <small>Critical Alerts</small>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="fa-solid fa-calendar-day" style="color: var(--green-event);"></i>
+        <div>
+          <h3 id="eventCount">0</h3>
+          <small>Upcoming Events</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH & CONTROLS -->
+    <div class="controls">
+      <div class="search-filter">
+        <input type="text" id="searchInput" placeholder="Search notices..." onkeyup="filterNews()" style="flex:1;">
+        <select id="categoryFilter" onchange="filterNews()">
+          <option value="ALL">All Categories</option>
+          <option value="Emergency">Emergency</option>
+          <option value="Event">Guild Event</option>
+          <option value="Quest Update">Quest Update</option>
+          <option value="General">General Notice</option>
+        </select>
+      </div>
+      <button class="btn" onclick="openModal()"><i class="fa-solid fa-plus"></i> Post Announcement</button>
+    </div>
+
+    <!-- NEWS BOARD CARDS GRID -->
+    <div class="news-grid" id="newsGrid">
+      <!-- Dynamic news cards will be injected here via JavaScript -->
+    </div>
+  </div>
+
+  <!-- MODAL FOR ADD / EDIT NEWS -->
+  <div class="modal-overlay" id="newsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Post Announcement</h2>
+        <button class="action-btn" onclick="closeModal()"><i class="fa-solid fa-xmark fa-xl"></i></button>
+      </div>
+      <form id="newsForm" onsubmit="saveNews(event)">
+        <input type="hidden" id="editIndex" value="-1">
+        <div class="form-group">
+          <label>Notice Title</label>
+          <input type="text" id="newsTitle" required placeholder="e.g. Dragon Sighting near Red Valley">
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="newsCategory" required>
+            <option value="General">General Notice</option>
+            <option value="Emergency">Emergency Alert</option>
+            <option value="Event">Guild Event</option>
+            <option value="Quest Update">Quest Update</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Posted By (Author)</label>
+          <input type="text" id="newsAuthor" required placeholder="Guild Master / Registrar">
+        </div>
+        <div class="form-group">
+          <label>Announcement Details</label>
+          <textarea id="newsContent" rows="4" required placeholder="Write news details here..."></textarea>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 1rem;">
+          <button type="button" class="btn btn-danger" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn">Publish Notice</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2026 Adventurer Association HQ. All directives signed by the Guild Master.</p>
+  </footer>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Initial Default Data
+    const defaultNews = [
+      {
+        title: "S-Rank Red Dragon Spotted in Ash Mountain",
+        category: "Emergency",
+        author: "Guild Master",
+        date: "2026-08-24",
+        content: "All Bronze & Silver rank adventurers are barred from Ash Mountain. Gold and S-Rank squads are requested to assemble at Guild HQ."
+      },
+      {
+        title: "Annual Guild Tournament & Feast",
+        category: "Event",
+        author: "Event Coordinator",
+        date: "2026-08-20",
+        content: "Registration for the Guild Grand Championship opens next Monday. Prize pool includes 500 Gold Coins and a Mythic Artifact."
+      },
+      {
+        title: "Maintenance Notice: Magic Vaults",
+        category: "General",
+        author: "Treasury Dept",
+        date: "2026-08-15",
+        content: "Vault B will remain closed for rune calibration between 10:00 AM and 4:00 PM tomorrow."
+      }
+    ];
+
+    // Load Data from LocalStorage or Default
+    let newsData = JSON.parse(localStorage.getItem('guild_news')) || defaultNews;
+
+    function saveToLocalStorage() {
+      localStorage.setItem('guild_news', JSON.stringify(newsData));
+    }
+
+    // Render News Items
+    function renderNews(data = newsData) {
+      const grid = document.getElementById('newsGrid');
+      grid.innerHTML = '';
+
+      if(data.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 2rem;">No notices found.</p>`;
+        updateStats();
+        return;
+      }
+
+      data.forEach((item, index) => {
+        let badgeClass = 'badge-notice';
+        if(item.category === 'Emergency') badgeClass = 'badge-emergency';
+        if(item.category === 'Event') badgeClass = 'badge-event';
+        if(item.category === 'Quest Update') badgeClass = 'badge-quest';
+
+        const card = document.createElement('div');
+        card.className = 'news-card';
+        card.innerHTML = `
+          <div>
+            <span class="badge ${badgeClass}">${item.category}</span>
+            <h3 class="news-title">${item.title}</h3>
+            <div class="news-meta">
+              <span><i class="fa-regular fa-user"></i> ${item.author}</span>
+              <span><i class="fa-regular fa-clock"></i> ${item.date}</span>
+            </div>
+            <p class="news-content">${item.content}</p>
+          </div>
+          <div class="card-actions">
+            <small style="color: var(--gold);"><i class="fa-solid fa-check-double"></i> Official</small>
+            <div class="action-btns">
+              <button class="action-btn" title="Edit" onclick="editNews(${index})"><i class="fa-solid fa-pen-to-square"></i></button>
+              <button class="action-btn delete" title="Delete" onclick="deleteNews(${index})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      updateStats();
+    }
+
+    // Update Counter Stats
+    function updateStats() {
+      document.getElementById('totalNews').innerText = newsData.length;
+      document.getElementById('emergencyCount').innerText = newsData.filter(n => n.category === 'Emergency').length;
+      document.getElementById('eventCount').innerText = newsData.filter(n => n.category === 'Event').length;
+    }
+
+    // Modal Control
+    function openModal() {
+      document.getElementById('newsForm').reset();
+      document.getElementById('editIndex').value = "-1";
+      document.getElementById('modalTitle').innerText = "Post Announcement";
+      document.getElementById('newsModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('newsModal').classList.remove('active');
+    }
+
+    // Save or Edit News
+    function saveNews(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById('editIndex').value);
+      
+      const newsObject = {
+        title: document.getElementById('newsTitle').value,
+        category: document.getElementById('newsCategory').value,
+        author: document.getElementById('newsAuthor').value,
+        date: new Date().toISOString().split('T')[0],
+        content: document.getElementById('newsContent').value
+      };
+
+      if(editIdx === -1) {
+        // Add New
+        newsData.unshift(newsObject);
+      } else {
+        // Edit Existing
+        newsData[editIdx] = newsObject;
+      }
+
+      saveToLocalStorage();
+      renderNews();
+      closeModal();
+    }
+
+    // Edit Functionality
+    function editNews(index) {
+      const item = newsData[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('newsTitle').value = item.title;
+      document.getElementById('newsCategory').value = item.category;
+      document.getElementById('newsAuthor').value = item.author;
+      document.getElementById('newsContent').value = item.content;
+
+      document.getElementById('modalTitle').innerText = "Edit Announcement";
+      document.getElementById('newsModal').classList.add('active');
+    }
+
+    // Delete Functionality
+    function deleteNews(index) {
+      if(confirm('Are you sure you want to delete this notice?')) {
+        newsData.splice(index, 1);
+        saveToLocalStorage();
+        renderNews();
+      }
+    }
+
+    // Search and Filter Functionality
+    function filterNews() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const cat = document.getElementById('categoryFilter').value;
+
+      const filtered = newsData.filter(item => {
+        const matchesCategory = (cat === 'ALL' || item.category === cat);
+        const matchesSearch = item.title.toLowerCase().includes(query) || item.content.toLowerCase().includes(query);
+        return matchesCategory && matchesSearch;
+      });
+
+      renderNews(filtered);
+    }
+
+    // Initial Load
+    renderNews();
+  </script>
+</body>
+</html>
