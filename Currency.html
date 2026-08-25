@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Fantasy Economy & Exchange Treasury</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .coin-bronze { color: #cd7f32; text-shadow: 0 0 8px rgba(205, 127, 50, 0.4); }
+        .coin-silver { color: #e2e8f0; text-shadow: 0 0 8px rgba(226, 232, 240, 0.4); }
+        .coin-gold { color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+        .coin-diamond { color: #38bdf8; text-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+        .coin-celestial { color: #c084fc; text-shadow: 0 0 14px rgba(192, 132, 252, 0.7); }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="max-w-7xl mx-auto mb-8 glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 border-b border-amber-500/30">
+        <div>
+            <h1 class="text-3xl font-extrabold text-amber-400 flex items-center gap-3">
+                <i class="fa-solid fa-coins text-amber-500"></i> Royal Treasury & Exchange Guild
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">Universal Currency Converter • Beast & Equipment Rank Appraisal System</p>
+        </div>
+        <div class="flex gap-4 text-center">
+            <div class="glass px-4 py-2 rounded-xl border border-amber-500/20">
+                <p class="text-[10px] text-slate-400 uppercase font-semibold">Standard Ratio</p>
+                <p class="text-xs font-bold text-amber-300">1 : 100 Tier Scale</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto space-y-8">
+
+        <!-- SECTION 1: Currency Breakdown Grid -->
+        <section>
+            <h2 class="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-vault text-amber-400"></i> Guild Currency Hierarchy & Exchange Value
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                
+                <!-- Copper/Bronze -->
+                <div class="glass p-5 rounded-2xl border border-amber-900/30 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-slate-400">TIER 1</span>
+                            <i class="fa-solid fa-coins text-2xl coin-bronze"></i>
+                        </div>
+                        <h3 class="text-lg font-bold coin-bronze">Bronze / Copper</h3>
+                        <p class="text-xs text-slate-400 mt-1">Base Currency. Used for common goods & daily food.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300">
+                        <strong>Value:</strong> 1 Unit (Base)
+                    </div>
+                </div>
+
+                <!-- Silver -->
+                <div class="glass p-5 rounded-2xl border border-slate-700/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-slate-400">TIER 2</span>
+                            <i class="fa-solid fa-coins text-2xl coin-silver"></i>
+                        </div>
+                        <h3 class="text-lg font-bold coin-silver">Silver Coin</h3>
+                        <p class="text-xs text-slate-400 mt-1">Standard Adventurer Pay. Used for potions & basic gear.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300">
+                        <strong>1 Silver =</strong> 100 Copper
+                    </div>
+                </div>
+
+                <!-- Gold -->
+                <div class="glass p-5 rounded-2xl border border-amber-500/40 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-amber-500/80">TIER 3</span>
+                            <i class="fa-solid fa-coins text-2xl coin-gold"></i>
+                        </div>
+                        <h3 class="text-lg font-bold coin-gold">Gold Coin</h3>
+                        <p class="text-xs text-slate-400 mt-1">High Economy. Used for magic weapons & rare beasts.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300">
+                        <strong>1 Gold =</strong> 100 Silver <span class="text-slate-500">(10k Copper)</span>
+                    </div>
+                </div>
+
+                <!-- Diamond -->
+                <div class="glass p-5 rounded-2xl border border-sky-500/40 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-sky-400">TIER 4</span>
+                            <i class="fa-solid fa-gem text-2xl coin-diamond"></i>
+                        </div>
+                        <h3 class="text-lg font-bold coin-diamond">Diamond Coin</h3>
+                        <p class="text-xs text-slate-400 mt-1">Nobility Tier. Guild Treasuries & S-Rank Artifacts.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300">
+                        <strong>1 Diamond =</strong> 100 Gold <span class="text-slate-500">(1M Copper)</span>
+                    </div>
+                </div>
+
+                <!-- Celestial -->
+                <div class="glass p-5 rounded-2xl border border-purple-500/50 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-bold text-purple-400">TIER 5 (MYTHIC)</span>
+                            <i class="fa-solid fa-crown text-2xl coin-celestial"></i>
+                        </div>
+                        <h3 class="text-lg font-bold coin-celestial">Celestial Ore</h3>
+                        <p class="text-xs text-slate-400 mt-1">Supreme Currency. Kingdom Raids & EX-Rank Items.</p>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-300">
+                        <strong>1 Celestial =</strong> 100 Diamond <span class="text-slate-500">(100M Copper)</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2: Calculators (Currency Converter & Item Appraisal) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- TOOL A: Direct Currency Exchange Converter -->
+            <section class="glass p-6 rounded-2xl border border-amber-500/20">
+                <h3 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator"></i> Currency Breakdown Converter
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">किसी भी करेंसी का अमाउंट डालें, सिस्टम ऑटोमैटिकली सभी डिनॉमिनेशन में कन्वर्ट कर देगा।</p>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Enter Amount</label>
+                            <input type="number" id="convertAmount" value="1" min="0" oninput="calculateCurrencyExchange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Select Currency Unit</label>
+                            <select id="convertUnit" onchange="calculateCurrencyExchange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="1">Copper / Bronze</option>
+                                <option value="100">Silver Coin</option>
+                                <option value="10000" selected>Gold Coin</option>
+                                <option value="1000000">Diamond Coin</option>
+                                <option value="100000000">Celestial Ore</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Converted Breakdown:</p>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="coin-celestial font-semibold"><i class="fa-solid fa-crown"></i> Celestial Ore:</span>
+                            <span id="outCelestial" class="font-bold text-purple-300">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="coin-diamond font-semibold"><i class="fa-solid fa-gem"></i> Diamond Coins:</span>
+                            <span id="outDiamond" class="font-bold text-sky-300">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="coin-gold font-semibold"><i class="fa-solid fa-coins"></i> Gold Coins:</span>
+                            <span id="outGold" class="font-bold text-amber-300">1</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="coin-silver font-semibold"><i class="fa-solid fa-coins"></i> Silver Coins:</span>
+                            <span id="outSilver" class="font-bold text-slate-200">0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="coin-bronze font-semibold"><i class="fa-solid fa-coins"></i> Copper / Bronze:</span>
+                            <span id="outCopper" class="font-bold text-amber-600">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TOOL B: Rank & Category Based Item Appraisal Calculator -->
+            <section class="glass p-6 rounded-2xl border border-amber-500/20">
+                <h3 class="text-lg font-bold text-amber-400 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-scale-balanced"></i> Item & Beast Rank Valuation Calculator
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">सामान, बीस्ट कोर, क्रिस्टल्स और इक्विपमेंट की रैंक के हिसाब से मार्केट प्राइस निकालें।</p>
+
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Item / Loot Category</label>
+                            <select id="itemCategory" onchange="calculateItemValuation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="50">Beast Core / Loot (Base: 50 Copper)</option>
+                                <option value="100">Mana Crystal / Catalyst (Base: 1 Silver)</option>
+                                <option value="500">Weapon / Armor Equipment (Base: 5 Silver)</option>
+                                <option value="50000" selected>Magical Relic / Artifact (Base: 5 Gold)</option>
+                                <option value="200">Alchemical Potion / Elixir (Base: 2 Silver)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Rank Grade</label>
+                            <select id="itemRank" onchange="calculateItemValuation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="1">F-Rank (x1 Multiplier)</option>
+                                <option value="5">E-Rank (x5 Multiplier)</option>
+                                <option value="20">D-Rank (x20 Multiplier)</option>
+                                <option value="100">C-Rank (x100 Multiplier)</option>
+                                <option value="500">B-Rank (x500 Multiplier)</option>
+                                <option value="2500">A-Rank (x2,500 Multiplier)</option>
+                                <option value="10000" selected>S-Rank (x10,000 Multiplier)</option>
+                                <option value="50000">SS-Rank (x50,000 Multiplier)</option>
+                                <option value="250000">SSS-Rank (x250,000 Multiplier)</option>
+                                <option value="1000000">EX-Rank God Tier (x1,000,000 Multiplier)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Quantity</label>
+                            <input type="number" id="itemQty" value="1" min="1" oninput="calculateItemValuation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">Rarity Condition</label>
+                            <select id="itemCondition" onchange="calculateItemValuation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
+                                <option value="1">Standard / Normal</option>
+                                <option value="1.5">Pristine / High Purity (+50%)</option>
+                                <option value="0.5">Damaged / Flawed (-50%)</option>
+                                <option value="3">Ancient / Enchanted (x3)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-950/40 p-4 rounded-xl border border-amber-500/30">
+                        <p class="text-xs font-bold text-amber-400 uppercase tracking-wider mb-1">Estimated Guild Valuation:</p>
+                        <h4 id="appraisalResult" class="text-xl font-extrabold text-white">0 Gold</h4>
+                        <p id="appraisalDetailed" class="text-xs text-slate-400 mt-1">Total in base copper: 0</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- SECTION 3: Standard Market Price Index Table -->
+        <section class="glass p-6 rounded-2xl border border-slate-800">
+            <h3 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-amber-400"></i> Association Market Reference Ledger
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
+                            <th class="py-3 px-4">Rank Grade</th>
+                            <th class="py-3 px-4">Beast Core Price</th>
+                            <th class="py-3 px-4">Mana Crystal</th>
+                            <th class="py-3 px-4">Weapon / Equipment</th>
+                            <th class="py-3 px-4">Ancient Artifact</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 text-slate-300">
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-slate-400">F - Rank</td>
+                            <td class="py-3 px-4 coin-bronze">50 Copper</td>
+                            <td class="py-3 px-4 coin-silver">1 Silver</td>
+                            <td class="py-3 px-4 coin-silver">5 Silver</td>
+                            <td class="py-3 px-4 coin-gold">5 Gold</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-green-400">C - Rank</td>
+                            <td class="py-3 px-4 coin-silver">50 Silver</td>
+                            <td class="py-3 px-4 coin-gold">1 Gold</td>
+                            <td class="py-3 px-4 coin-gold">5 Gold</td>
+                            <td class="py-3 px-4 coin-gold">500 Gold</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-blue-400">A - Rank</td>
+                            <td class="py-3 px-4 coin-gold">12.5 Gold</td>
+                            <td class="py-3 px-4 coin-gold">25 Gold</td>
+                            <td class="py-3 px-4 coin-gold">125 Gold</td>
+                            <td class="py-3 px-4 coin-diamond">1.25 Diamond</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-amber-400">S - Rank</td>
+                            <td class="py-3 px-4 coin-gold">50 Gold</td>
+                            <td class="py-3 px-4 coin-gold">100 Gold (1 Diamond)</td>
+                            <td class="py-3 px-4 coin-diamond">5 Diamond</td>
+                            <td class="py-3 px-4 coin-diamond">50 Diamond</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-bold text-purple-400">EX - Rank (Mythic)</td>
+                            <td class="py-3 px-4 coin-diamond">500 Diamond</td>
+                            <td class="py-3 px-4 coin-diamond">1,000 Diamond</td>
+                            <td class="py-3 px-4 coin-celestial">50 Celestial Ore</td>
+                            <td class="py-3 px-4 coin-celestial">500 Celestial Ore</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive JavaScript -->
+    <script>
+        // Helper to format full breakdown from raw Copper
+        function formatCopperToFullCurrency(totalCopper) {
+            let copper = Math.floor(totalCopper);
+            
+            const celestials = Math.floor(copper / 100000000);
+            copper %= 100000000;
+
+            const diamonds = Math.floor(copper / 1000000);
+            copper %= 1000000;
+
+            const golds = Math.floor(copper / 10000);
+            copper %= 10000;
+
+            const silvers = Math.floor(copper / 100);
+            copper %= 100;
+
+            return {
+                celestials: celestials,
+                diamonds: diamonds,
+                golds: golds,
+                silvers: silvers,
+                coppers: copper
+            };
+        }
+
+        // TOOL A: Currency Breakdown Calculator
+        function calculateCurrencyExchange() {
+            const amount = parseFloat(document.getElementById('convertAmount').value) || 0;
+            const unitMultiplier = parseFloat(document.getElementById('convertUnit').value) || 1;
+
+            const totalCopper = amount * unitMultiplier;
+            const result = formatCopperToFullCurrency(totalCopper);
+
+            document.getElementById('outCelestial').innerText = result.celestials.toLocaleString();
+            document.getElementById('outDiamond').innerText = result.diamonds.toLocaleString();
+            document.getElementById('outGold').innerText = result.golds.toLocaleString();
+            document.getElementById('outSilver').innerText = result.silvers.toLocaleString();
+            document.getElementById('outCopper').innerText = result.coppers.toLocaleString();
+        }
+
+        // TOOL B: Item / Beast Valuation Calculator
+        function calculateItemValuation() {
+            const baseVal = parseFloat(document.getElementById('itemCategory').value) || 0;
+            const rankMult = parseFloat(document.getElementById('itemRank').value) || 1;
+            const qty = parseFloat(document.getElementById('itemQty').value) || 1;
+            const condMult = parseFloat(document.getElementById('itemCondition').value) || 1;
+
+            const totalCopper = baseVal * rankMult * qty * condMult;
+            const result = formatCopperToFullCurrency(totalCopper);
+
+            // Display standard string format
+            let parts = [];
+            if (result.celestials > 0) parts.push(`${result.celestials.toLocaleString()} Celestial`);
+            if (result.diamonds > 0) parts.push(`${result.diamonds.toLocaleString()} Diamond`);
+            if (result.golds > 0) parts.push(`${result.golds.toLocaleString()} Gold`);
+            if (result.silvers > 0) parts.push(`${result.silvers.toLocaleString()} Silver`);
+            if (result.coppers > 0 || parts.length === 0) parts.push(`${result.coppers.toLocaleString()} Copper`);
+
+            document.getElementById('appraisalResult').innerText = parts.join(', ');
+            document.getElementById('appraisalDetailed').innerText = `Total Raw Value: ${Math.round(totalCopper).toLocaleString()} Copper Units`;
+        }
+
+        // Initialize Calculators on Load
+        window.onload = function() {
+            calculateCurrencyExchange();
+            calculateItemValuation();
+        };
+    </script>
+</body>
+</html>
