@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADVENTURE ASSOCIATION — International Adventurer Portal v7</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{colors:{brand:{dark:'#05070A',card:'#0D111A',gold:'#F59E0B',cyan:'#06B6D4'}},fontFamily:{sans:['Rajdhani','sans-serif'],display:['Cinzel','serif'],mono:['JetBrains Mono','monospace']}}}};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x:hidden}
+.glass-panel{background:rgba(13,17,26,.8);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
+.glass-panel-gold{background:rgba(20,16,10,.85);backdrop-filter:blur(16px);border:1px solid rgba(245,158,11,.3)}
+.text-gold-gradient{background:linear-gradient(135deg,#FFF,#FBBF24,#D97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.perspective-1000{perspective:1000px}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.175,.885,.32,1.275);transform-style:preserve-3d}
+.card-inner.flipped{transform:rotateY(180deg)}
+.card-front,.card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:1rem}
+.card-back{transform:rotateY(180deg)}
+.holo-sheen{position:relative;overflow:hidden}
+.status-badge-ACTIVE{background:rgba(16,185,129,.2);color:#34d399;border:1px solid #10b981}
+.status-badge-SUSPENDED{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid #f59e0b}
+.status-badge-BLOCKED{background:rgba(239,68,68,.2);color:#f87171;border:1px solid #ef4444}
+.status-badge-EXPIRED{background:rgba(100,116,139,.2);color:#94a3b8;border:1px solid #64748b}
+.dash-tab.active{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.5);color:#fbbf24}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#05070a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
+.card-rank-S{border-color:#f59e0b!important;box-shadow:0 0 30px rgba(245,158,11,.55)}
+.card-rank-SS{border-color:#f97316!important;box-shadow:0 0 35px rgba(249,115,22,.6)}
+.card-rank-SSS{border-color:#ef4444!important;box-shadow:0 0 40px rgba(239,68,68,.65)}
+.card-rank-EX{box-shadow:0 0 50px rgba(255,215,0,.7),0 0 80px rgba(153,0,255,.4)}
+.card-rank-A{border-color:#a855f7!important}.card-rank-B{border-color:#3b82f6!important}
+.card-rank-C{border-color:#22c55e!important}.card-rank-D,.card-rank-E{border-color:#64748b!important}
+</style>
+</head>
+<body class="min-h-screen flex flex-col relative selection:bg-cyan-500 selection:text-black">
+<canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0 opacity-40"></canvas>
+
+<header class="sticky top-0 z-50 glass-panel border-b border-slate-800/80">
+<div class="max-w-7xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between">
+<a href="javascript:void(0)" onclick="app.navTo('landing')" class="flex items-center gap-3 group">
+<div class="w-10 h-10 rounded-lg bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 p-0.5 shadow-lg shadow-amber-500/20">
+<div class="w-full h-full bg-slate-950 rounded-[7px] flex items-center justify-center"><i class="fa-solid fa-shield-halved text-amber-400 text-lg"></i></div>
+</div>
+<div><span class="font-display font-black text-xl tracking-wider text-slate-100 block leading-none">ADVENTURE</span>
+<span class="text-[10px] tracking-[0.25em] text-amber-400 font-bold block">ASSOCIATION</span></div>
+</a>
+<nav class="hidden md:flex items-center gap-5 text-sm font-semibold">
+<button onclick="app.navTo('landing')" class="hover:text-amber-400 text-slate-300">HQ HOME</button>
+<button onclick="app.startRegistration()" class="hover:text-amber-400 text-slate-300"><i class="fa-solid fa-id-card text-xs text-amber-400"></i> REGISTER</button>
+<button onclick="app.navTo('portals')" class="hover:text-amber-400 text-slate-300"><i class="fa-solid fa-link text-xs text-cyan-400"></i> PORTAL LINKS</button>
+<button onclick="app.navTo('verify')" class="hover:text-amber-400 text-slate-300">CARD VERIFY</button>
+<button onclick="app.navTo('admin')" class="text-xs px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-amber-400 font-mono"><i class="fa-solid fa-user-shield"></i> ADMIN HQ</button>
+</nav>
+<div class="flex items-center gap-3">
+<button onclick="app.toggleSound()" class="w-9 h-9 rounded-lg border border-slate-800 bg-slate-900/80 flex items-center justify-center text-slate-400 hover:text-amber-400"><i id="soundIcon" class="fa-solid fa-volume-high"></i></button>
+<div id="navUserBadge" class="hidden sm:flex pl-3 border-l border-slate-800">
+<button onclick="app.navTo('dashboard')" class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-mono">
+<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span id="navAdventurerName">ACTIVE ID</span>
+</button></div>
+<button onclick="app.toggleMobileNav()" class="md:hidden w-10 h-10 rounded-lg bg-slate-900 border border-slate-800 text-slate-300"><i class="fa-solid fa-bars"></i></button>
+</div></div>
+<div id="mobileNav" class="hidden md:hidden bg-slate-950 border-b border-slate-800 px-6 py-4 flex flex-col gap-3 text-sm">
+<button onclick="app.navTo('landing');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-slate-300">HQ HOME</button>
+<button onclick="app.startRegistration();app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-amber-400 font-bold">REGISTER</button>
+<button onclick="app.navTo('portals');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-cyan-300">PORTAL LINKS</button>
+<button onclick="app.navTo('verify');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-slate-300">CARD VERIFY</button>
+<button onclick="app.navTo('admin');app.toggleMobileNav()" class="text-left py-2 text-amber-400 font-bold">ADMIN HQ</button>
+</div>
+</header>
+
+<main class="relative z-10 flex-grow">
+
+<!-- LANDING -->
+<section id="viewLanding" class="view-section">
+<div class="relative min-h-[85vh] flex items-center justify-center pt-12 pb-24 px-4">
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="max-w-4xl mx-auto text-center space-y-8 relative z-10">
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-300 text-xs font-mono font-bold tracking-wider uppercase">
+<i class="fa-solid fa-certificate"></i> Official Global Portal — Registry v7.0</div>
+<h1 class="font-display font-black text-5xl sm:text-7xl tracking-tight text-white leading-tight">ADVENTURE<br><span class="text-gold-gradient">ASSOCIATION</span></h1>
+<p class="font-mono text-slate-300 text-base sm:text-xl max-w-2xl mx-auto">“Know Your Potential. Register Equipment & Summoning. Ascend the Ranks.”</p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+<button onclick="app.startRegistration()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-black font-extrabold tracking-wider shadow-lg shadow-amber-500/25 hover:scale-[1.02] transition flex items-center justify-center gap-3"><i class="fa-solid fa-scroll"></i> REGISTER AS ADVENTURER</button>
+<button onclick="app.loadDemoAdventurer()" class="w-full sm:w-auto px-7 py-4 rounded-xl border border-cyan-500/40 bg-cyan-950/30 text-cyan-300 font-bold tracking-wider hover:border-cyan-400 transition flex items-center justify-center gap-2"><i class="fa-solid fa-user-astronaut"></i> DEMO PROFILE (EX)</button>
+<button onclick="app.navTo('verify')" class="w-full sm:w-auto px-6 py-4 rounded-xl border border-slate-700 bg-slate-900/80 text-slate-300 font-bold tracking-wider hover:border-slate-500 transition"><i class="fa-solid fa-magnifying-glass"></i> VERIFY CARD</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-12 max-w-3xl mx-auto">
+<div class="glass-panel p-4 rounded-xl text-center"><div class="text-xs text-slate-400 font-mono uppercase mb-1">HEROES</div><div id="statTotal" class="text-2xl font-bold font-mono text-amber-400">0</div></div>
+<div class="glass-panel p-4 rounded-xl text-center"><div class="text-xs text-slate-400 font-mono uppercase mb-1">7 KINGDOMS</div><div class="text-2xl font-bold font-mono text-cyan-400">ACTIVE</div></div>
+<div class="glass-panel p-4 rounded-xl text-center"><div class="text-xs text-slate-400 font-mono uppercase mb-1">INVENTORY</div><div class="text-2xl font-bold font-mono text-emerald-400">ON</div></div>
+<div class="glass-panel p-4 rounded-xl text-center"><div class="text-xs text-slate-400 font-mono uppercase mb-1">HQ</div><div class="text-2xl font-bold font-mono text-rose-400">SECURE</div></div>
+</div></div></div>
+</section>
+
+<!-- REGISTER WIZARD - keep compact reference to same 6 steps from original logic via JS -->
+<section id="viewRegister" class="view-section hidden max-w-4xl mx-auto px-4 py-10">
+<div class="glass-panel p-6 rounded-2xl mb-8 border-slate-800">
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+<div><span class="text-amber-400 font-mono text-xs font-bold uppercase tracking-widest">ASSESSMENT CHAMBER</span>
+<h2 id="wizardStepTitle" class="font-display font-extrabold text-2xl text-white">STEP 1</h2></div>
+<div class="font-mono text-xs px-3 py-1.5 rounded-lg bg-slate-900 border border-amber-500/30 text-amber-300">ID: <span id="wizardGeneratedID" class="font-bold">AA-PENDING</span></div>
+</div>
+<div class="grid grid-cols-6 gap-2">
+<div id="pStep1" class="h-2 rounded-full bg-amber-500"></div>
+<div id="pStep2" class="h-2 rounded-full bg-slate-800"></div>
+<div id="pStep3" class="h-2 rounded-full bg-slate-800"></div>
+<div id="pStep4" class="h-2 rounded-full bg-slate-800"></div>
+<div id="pStep5" class="h-2 rounded-full bg-slate-800"></div>
+<div id="pStep6" class="h-2 rounded-full bg-slate-800"></div>
+</div></div>
+
+<div id="regStep1" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6">
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-user-gear text-amber-400"></i> Identity</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Full Name *</label><input id="regFullName" type="text" placeholder="Kaelen Vance" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Codename *</label><input id="regCodename" type="text" placeholder="Shadow Vanguard" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 font-mono text-sm font-bold focus:border-amber-400 focus:outline-none"></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">DOB</label><input id="regDOB" type="date" value="2002-05-14" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Gender</label><select id="regGender" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"><option>Male</option><option>Female</option><option>Non-Binary</option><option>Unspecified</option></select></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Nationality</label><input id="regNationality" type="text" value="Valorian Republic" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
+<div><label class="block text-xs font-mono text-amber-400 mb-1 uppercase font-bold">Region (7 Kingdoms) *</label>
+<select id="regRegion" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-mono text-sm focus:border-amber-400 focus:outline-none">
+<option>Kingdom 1 — Valoria (High Citadel)</option><option>Kingdom 2 — Solaria (Sunfire Realm)</option>
+<option>Kingdom 3 — Ignis (Volcanic Domain)</option><option>Kingdom 4 — Aquaria (Tidal Abyss)</option>
+<option>Kingdom 5 — Terran (Iron Mountains)</option><option>Kingdom 6 — Zephyr (Celestial Sky)</option>
+<option>Kingdom 7 — Umbra (Shadow Void)</option>
+</select></div></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-2 uppercase">Profile Photo *</label>
+<div class="flex items-center gap-4">
+<div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center">
+<img id="avatarPreview" class="w-full h-full object-cover hidden"><i id="avatarPlaceholder" class="fa-solid fa-user text-3xl text-slate-600"></i></div>
+<input type="file" id="avatarUpload" accept="image/*" class="text-sm text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:bg-amber-500 file:text-black">
+</div></div>
+<div class="flex justify-end"><button onclick="app.wizardNext(1)" class="px-8 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold">NEXT <i class="fa-solid fa-arrow-right"></i></button></div>
+</div>
+
+<div id="regStep2" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-dna text-amber-400"></i> Clan</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" id="clanSelectionGrid"></div>
+<div id="customClanContainer" class="hidden"><input id="customClanInput" type="text" placeholder="Custom clan name" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-mono text-sm"></div>
+<div class="flex justify-between"><button onclick="app.wizardBack(2)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<button onclick="app.wizardNext(2)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
+</div>
+
+<div id="regStep3" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-sliders text-amber-400"></i> 5 Attributes</h3>
+<div class="space-y-4 max-w-xl mx-auto" id="attrSliders"></div>
+<div class="flex justify-between"><button onclick="app.wizardBack(3)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<button onclick="app.wizardNext(3)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
+</div>
+
+<div id="regStep4" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
+<div class="flex justify-between items-center border-b border-slate-800 pb-3">
+<h3 class="text-lg font-bold text-slate-200"><i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Tri-Power (pick 3)</h3>
+<span id="powerSlotsCounter" class="font-mono text-amber-300 font-bold">0 / 3</span></div>
+<div class="bg-slate-950/80 p-4 rounded-xl border border-amber-500/30 space-y-3">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+<input id="customPowerName" placeholder="Custom power name" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<select id="customPowerType" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300"><option>S Rank</option><option>EX Rank</option><option>SSS Rank</option><option>SS Rank</option><option>A Rank</option></select>
+<input id="customPowerCategory" placeholder="Category" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+</div>
+<input id="customPowerDesc" placeholder="Description" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-200">
+<button onclick="app.addCustomPower()" class="px-4 py-2 rounded-xl bg-cyan-500 text-black font-bold text-xs">ADD CUSTOM</button>
+<span id="customPowerCountBadge" class="text-[10px] font-mono text-slate-400">Custom: 0/3</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-64 overflow-y-auto" id="powersGrid"></div>
+<div class="flex justify-between"><button onclick="app.wizardBack(4)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<button onclick="app.wizardNext(4)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
+</div>
+
+<div id="regStep5" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-shield-halved text-amber-400"></i> Primary Equipment</h3>
+<input id="regEquipName" type="text" value="Sunfire Greatsword" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 font-mono text-sm font-bold focus:border-amber-400 focus:outline-none">
+<textarea id="regEquipDesc" rows="2" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs focus:border-amber-400 focus:outline-none">Forged from solar plasma ore.</textarea>
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center">
+<img id="equipPreview" class="w-full h-full object-cover hidden"><i id="equipPlaceholder" class="fa-solid fa-shield text-2xl text-slate-600"></i></div>
+<input type="file" id="equipUpload" accept="image/*" class="text-sm text-slate-400 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+</div>
+<div class="flex justify-between"><button onclick="app.wizardBack(5)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<button onclick="app.wizardNext(5)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
+</div>
+
+<div id="regStep6" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-paw text-amber-400"></i> Summon / Familiar</h3>
+<label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="regHasSummon" onchange="app.toggleSummonFields()" class="w-5 h-5 accent-amber-500"><span class="font-mono text-sm font-bold text-amber-300">I have a summon</span></label>
+<div id="summonFieldsContainer" class="hidden space-y-3">
+<input id="regSummonName" type="text" value="Shadow Fenrir" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 font-mono text-sm font-bold">
+<textarea id="regSummonDesc" rows="2" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs">Primordial shadow wolf.</textarea>
+<div class="flex items-center gap-4">
+<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-cyan-400/50 overflow-hidden flex items-center justify-center">
+<img id="summonPreview" class="w-full h-full object-cover hidden"><i id="summonPlaceholder" class="fa-solid fa-dog text-2xl text-slate-600"></i></div>
+<input type="file" id="summonUpload" accept="image/*" class="text-sm text-slate-400 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-cyan-500 file:text-black file:font-bold">
+</div></div>
+<div class="flex justify-between"><button onclick="app.wizardBack(6)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<button id="btnCommenceAssessment" onclick="app.commenceAssessment()" disabled class="px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-extrabold cursor-not-allowed"><i class="fa-solid fa-microchip"></i> COMMENCE ASSESSMENT</button></div>
+</div>
+</section>
+
+<!-- ASSESSMENT MODAL -->
+<div id="assessmentModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+<div class="max-w-md w-full glass-panel-gold p-8 rounded-2xl text-center space-y-6">
+<div class="w-20 h-20 mx-auto rounded-full bg-amber-500/10 border-2 border-amber-400 flex items-center justify-center text-amber-400 text-3xl animate-pulse"><i class="fa-solid fa-atom"></i></div>
+<h3 class="font-display font-black text-2xl text-white">ASSESSMENT IN PROGRESS</h3>
+<p id="assessmentStatusText" class="font-mono text-xs text-amber-400">Processing...</p>
+<div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden"><div id="assessmentProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-cyan-400 w-0 transition-all"></div></div>
+</div></div>
+
+<!-- REVEAL -->
+<section id="viewReveal" class="view-section hidden min-h-[85vh] flex items-center justify-center py-16 px-4">
+<div class="max-w-2xl w-full glass-panel-gold p-8 sm:p-12 rounded-3xl text-center space-y-6">
+<div class="text-xs font-mono tracking-[0.3em] text-amber-400 font-bold uppercase">ASSESSMENT COMPLETE</div>
+<h2 class="font-display font-extrabold text-3xl text-white">ADVENTURER EVALUATION</h2>
+<div class="bg-slate-950/80 p-6 rounded-2xl border border-slate-800 text-left space-y-2">
+<div class="flex justify-between border-b border-slate-900 pb-2"><span class="text-xs font-mono text-slate-400">ID</span><span id="revealID" class="font-mono text-amber-300 font-bold"></span></div>
+<div class="flex justify-between border-b border-slate-900 pb-2"><span class="text-xs font-mono text-slate-400">NAME</span><span id="revealName" class="font-bold text-white text-lg"></span></div>
+<div class="flex justify-between border-b border-slate-900 pb-2"><span class="text-xs font-mono text-slate-400">REGION</span><span id="revealRegion" class="text-amber-400 font-bold text-xs"></span></div>
+<div class="flex justify-between border-b border-slate-900 pb-2"><span class="text-xs font-mono text-slate-400">POWER INDEX</span><span id="revealPowerIndex" class="font-mono text-2xl font-black text-amber-400"></span></div>
+<div><span class="text-xs font-mono text-slate-400 block">ABILITY</span><span id="revealAbilityName" class="font-display font-black text-xl text-amber-300 block"></span>
+<span id="revealAbilityDesc" class="text-xs text-slate-400"></span></div>
+</div>
+<div id="revealRankBadge" class="inline-block px-10 py-4 rounded-2xl bg-gradient-to-tr from-amber-600 to-yellow-300 text-black font-display font-black text-6xl">S</div>
+<button onclick="app.claimCard()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black tracking-wider text-lg mx-auto block"><i class="fa-solid fa-id-card"></i> CLAIM CARD</button>
+</div></section>
+
+<!-- CARD -->
+<section id="viewCard" class="view-section hidden max-w-5xl mx-auto px-4 py-12">
+<div class="text-center space-y-2 mb-8"><span class="text-amber-400 font-mono text-xs font-bold tracking-widest uppercase">VERIFIED ID</span>
+<h2 class="font-display font-black text-3xl text-white">OFFICIAL ADVENTURER CARD</h2>
+<p class="text-slate-400 text-sm">Click card to flip</p></div>
+<div class="w-full max-w-md sm:max-w-xl mx-auto h-[520px] sm:h-[360px] perspective-1000 mb-8">
+<div id="adventureCardInner" onclick="app.flipCard()" class="card-inner cursor-pointer shadow-2xl">
+<div id="cardFront" class="card-front glass-panel-gold border-2 border-amber-500/50 p-6 flex flex-col justify-between holo-sheen">
+<div class="flex justify-between items-center border-b border-amber-500/30 pb-2">
+<div class="flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400 text-xl"></i>
+<div><h4 class="font-display font-black text-sm text-white">ADVENTURE ASSOCIATION</h4>
+<span id="cardFrontRegion" class="text-[9px] font-mono text-amber-400 uppercase"></span></div></div>
+<span id="cardFrontStatusBadge" class="font-mono text-xs font-bold status-badge-ACTIVE px-2 py-1 rounded-full uppercase">ACTIVE</span>
+</div>
+<div class="flex gap-4 items-center py-2">
+<div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-amber-400/60 overflow-hidden flex-shrink-0"><img id="cardFrontAvatar" class="w-full h-full object-cover"></div>
+<div><div class="font-mono text-[10px] text-amber-400">ID: <span id="cardFrontID" class="text-white font-bold"></span></div>
+<h3 id="cardFrontName" class="font-display font-bold text-xl text-white"></h3>
+<div id="cardFrontCodename" class="text-xs font-mono text-amber-300"></div>
+<div class="flex gap-2 mt-1"><span id="cardFrontClan" class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-cyan-300"></span>
+<span id="cardFrontIndex" class="text-[10px] font-mono bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded text-amber-300"></span></div>
+</div></div>
+<div class="border-t border-amber-500/30 pt-2 flex justify-between items-center">
+<div><span class="text-[9px] font-mono text-slate-400 uppercase">ABILITY</span><span id="cardFrontAbility" class="font-bold text-sm text-amber-300 block"></span></div>
+<div id="cardFrontRankBadge" class="w-12 h-12 rounded-xl bg-amber-500 text-black font-display font-black text-2xl flex items-center justify-center">S</div>
+</div></div>
+<div id="cardBack" class="card-back glass-panel-gold border-2 border-cyan-500/50 p-6 flex flex-col justify-between">
+<div class="flex justify-between border-b border-cyan-500/30 pb-2"><span class="font-mono text-xs font-bold text-cyan-400 uppercase">DOSSIER</span>
+<span id="cardBackStatusBadge" class="text-[10px] font-mono status-badge-ACTIVE px-2 py-0.5 rounded uppercase">ACTIVE</span></div>
+<div class="grid grid-cols-5 gap-1" id="cardBackStats"></div>
+<div class="bg-slate-950/70 p-2 rounded-xl border border-slate-800"><div class="text-[9px] font-mono text-slate-400 uppercase">POWERS</div>
+<div id="cardBackPowers" class="text-xs font-mono text-cyan-300 font-bold flex flex-wrap gap-1"></div></div>
+<div class="grid grid-cols-2 gap-2 text-xs font-mono">
+<div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
+<div class="w-10 h-10 rounded-lg bg-slate-900 border border-amber-500/40 overflow-hidden flex items-center justify-center">
+<img id="cardBackEquipImg" class="w-full h-full object-cover hidden"><i id="cardBackEquipIcon" class="fa-solid fa-shield text-amber-400"></i></div>
+<div><span class="text-[8px] text-amber-400 uppercase font-bold">EQUIP</span><span id="cardBackEquipName" class="text-[11px] text-white font-bold block truncate"></span></div></div>
+<div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
+<div class="w-10 h-10 rounded-lg bg-slate-900 border border-cyan-500/40 overflow-hidden flex items-center justify-center">
+<img id="cardBackSummonImg" class="w-full h-full object-cover hidden"><i id="cardBackSummonIcon" class="fa-solid fa-paw text-cyan-400"></i></div>
+<div><span class="text-[8px] text-cyan-400 uppercase font-bold">SUMMON</span><span id="cardBackSummonName" class="text-[11px] text-white font-bold block truncate"></span></div></div>
+</div>
+<div class="border-t border-cyan-500/30 pt-2 text-[9px] font-mono text-slate-400"><p>PROPERTY OF ADVENTURE ASSOCIATION</p><p class="text-cyan-400">DIGITAL SEAL: VERIFIED</p></div>
+</div></div></div>
+<div class="flex flex-wrap justify-center gap-3">
+<button onclick="app.flipCard()" class="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-bold text-sm"><i class="fa-solid fa-rotate text-amber-400"></i> FLIP</button>
+<button onclick="app.navTo('dashboard')" class="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-sm">DASHBOARD <i class="fa-solid fa-arrow-right"></i></button>
+</div>
+</section>
+
+
+<!-- DASHBOARD -->
+<section id="viewDashboard" class="view-section hidden max-w-7xl mx-auto px-4 py-10 space-y-6">
+<div class="glass-panel p-6 rounded-3xl border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="flex items-center gap-5">
+<div class="w-20 h-20 rounded-2xl bg-slate-900 border-2 border-amber-400/80 overflow-hidden"><img id="dashAvatar" class="w-full h-full object-cover"></div>
+<div>
+<div class="flex flex-wrap items-center gap-2">
+<h2 id="dashName" class="font-display font-black text-2xl text-white"></h2>
+<span id="dashRankBadge" class="px-3 py-1 rounded-lg bg-amber-500 text-black font-display font-black text-sm"></span>
+<span id="dashStatusBadge" class="px-3 py-1 rounded-lg status-badge-ACTIVE font-mono font-bold text-xs uppercase">ACTIVE</span>
+</div>
+<p id="dashCodename" class="text-sm font-mono text-amber-300 font-bold"></p>
+<div class="text-xs font-mono text-slate-400 mt-1">ID: <span id="dashID" class="text-white font-bold"></span> • Region: <span id="dashRegion" class="text-amber-400"></span> • Clan: <span id="dashClan" class="text-cyan-300"></span></div>
+</div></div>
+<div class="w-full md:w-64 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+<div class="flex justify-between text-xs font-mono mb-1"><span class="text-slate-400">PROGRESS</span><span id="dashXPText" class="text-amber-400 font-bold">742/1000 XP</span></div>
+<div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden mb-1"><div id="dashXPBar" class="h-full bg-gradient-to-r from-amber-500 to-yellow-300 w-[74%]"></div></div>
+<div class="flex justify-between text-[10px] font-mono text-slate-400"><span>CUR: <strong id="dashCurrentRank">S</strong></span><span>NEXT: <strong id="dashNextRank">SS</strong></span></div>
+</div></div>
+
+<div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+<button onclick="app.setDashTab('overview')" id="tabOverview" class="dash-tab active px-5 py-2.5 rounded-xl border border-transparent text-sm font-bold font-mono"><i class="fa-solid fa-chart-radar mr-1"></i> OVERVIEW</button>
+<button onclick="app.setDashTab('inventory')" id="tabInventory" class="dash-tab px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 text-sm font-bold font-mono hover:border-amber-500/40"><i class="fa-solid fa-box-open mr-1"></i> INVENTORY</button>
+<button onclick="app.setDashTab('achievements')" id="tabAchievements" class="dash-tab px-5 py-2.5 rounded-xl border border-slate-800 text-slate-400 text-sm font-bold font-mono hover:border-amber-500/40"><i class="fa-solid fa-trophy mr-1"></i> ACHIEVEMENTS</button>
+</div>
+
+<div id="dashPanelOverview" class="dash-panel space-y-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-6">
+<div class="glass-panel p-6 rounded-2xl border-slate-800 space-y-4">
+<div class="flex justify-between items-center border-b border-slate-800 pb-3">
+<h3 class="font-bold text-slate-200"><i class="fa-solid fa-chart-radar text-amber-400"></i> CORE 5 ATTRIBUTES</h3>
+<span id="dashPowerIndexBig" class="font-mono font-black text-2xl text-amber-400"></span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="dashStatsGrid"></div>
+</div>
+<div class="glass-panel-gold p-6 rounded-2xl space-y-2">
+<span class="text-xs font-mono text-amber-400 font-bold tracking-widest uppercase">SPELL MATRIX</span>
+<h3 id="dashAbilityName" class="font-display font-black text-2xl text-white"></h3>
+<p id="dashAbilityDesc" class="text-sm text-slate-300"></p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="glass-panel p-5 rounded-2xl border-slate-800 space-y-2">
+<span class="text-xs font-mono text-amber-400 font-bold uppercase"><i class="fa-solid fa-shield-halved"></i> PRIMARY EQUIP</span>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-xl bg-slate-950 border border-amber-500/40 overflow-hidden flex items-center justify-center">
+<img id="dashEquipImg" class="w-full h-full object-cover hidden"><i id="dashEquipIcon" class="fa-solid fa-shield text-xl text-amber-400"></i></div>
+<div><h4 id="dashEquipName" class="font-bold text-white"></h4><p id="dashEquipDesc" class="text-xs text-slate-400 line-clamp-2"></p></div>
+</div></div>
+<div class="glass-panel p-5 rounded-2xl border-slate-800 space-y-2">
+<span class="text-xs font-mono text-cyan-400 font-bold uppercase"><i class="fa-solid fa-paw"></i> SUMMON</span>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-xl bg-slate-950 border border-cyan-500/40 overflow-hidden flex items-center justify-center">
+<img id="dashSummonImg" class="w-full h-full object-cover hidden"><i id="dashSummonIcon" class="fa-solid fa-paw text-xl text-cyan-400"></i></div>
+<div><h4 id="dashSummonName" class="font-bold text-white"></h4><p id="dashSummonDesc" class="text-xs text-slate-400 line-clamp-2"></p></div>
+</div></div>
+</div></div>
+<div class="glass-panel p-6 rounded-2xl border-slate-800 space-y-3">
+<h3 class="font-bold text-slate-200"><i class="fa-solid fa-certificate text-cyan-400"></i> LICENSE</h3>
+<div class="text-sm font-mono space-y-2">
+<div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-400">MAX QUEST</span><span id="dashMaxQuest" class="text-amber-300 font-bold">S RANK</span></div>
+<div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-400">STATUS</span><span id="dashStatusText" class="text-emerald-400 font-bold">ACTIVE</span></div>
+</div>
+<button onclick="app.navTo('card')" class="w-full py-3 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold text-xs font-mono">VIEW CARD</button>
+</div></div></div>
+
+<div id="dashPanelInventory" class="dash-panel hidden space-y-4">
+<div class="flex flex-col sm:flex-row justify-between gap-3">
+<div><h3 class="font-display font-black text-2xl text-white"><i class="fa-solid fa-box-open text-amber-400"></i> INVENTORY</h3>
+<p class="text-xs text-slate-400 font-mono">Weapons, potions, armor, relics — edit anytime, auto-saves</p></div>
+<button onclick="app.openInventoryModal()" class="px-5 py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-sm"><i class="fa-solid fa-plus"></i> ADD ITEM</button>
+</div>
+<div class="flex flex-wrap gap-2" id="invTypeFilter"></div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="inventoryGrid"></div>
+<p id="invEmptyMsg" class="hidden text-center text-slate-500 font-mono text-sm py-10">No items yet. Click ADD ITEM.</p>
+</div>
+
+<div id="dashPanelAchievements" class="dash-panel hidden space-y-4">
+<div class="flex flex-col sm:flex-row justify-between gap-3">
+<div><h3 class="font-display font-black text-2xl text-white"><i class="fa-solid fa-trophy text-amber-400"></i> ACHIEVEMENTS</h3>
+<p class="text-xs text-slate-400 font-mono">Feats & milestones — edit anytime, auto-saves</p></div>
+<button onclick="app.openAchievementModal()" class="px-5 py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-sm"><i class="fa-solid fa-plus"></i> ADD ACHIEVEMENT</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="achievementsGrid"></div>
+<p id="achEmptyMsg" class="hidden text-center text-slate-500 font-mono text-sm py-10">No achievements yet.</p>
+</div>
+</section>
+
+<!-- PORTAL LINKS -->
+<section id="viewPortals" class="view-section hidden max-w-7xl mx-auto px-4 py-10 space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div><span class="text-cyan-400 font-mono text-xs font-bold tracking-widest uppercase">WEB GATEWAYS</span>
+<h2 class="font-display font-black text-3xl text-white">PORTAL LINK HUB</h2>
+<p class="text-slate-400 text-sm">Click to open. Manage links from Admin HQ.</p></div>
+<div class="flex flex-wrap gap-2" id="portalCategoryFilter"></div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="portalsGrid"></div>
+<p id="portalsEmptyMsg" class="hidden text-center text-slate-500 font-mono text-sm py-10">No portals. Add from Admin HQ → Portal Links.</p>
+</section>
+
+<!-- VERIFY -->
+<section id="viewVerify" class="view-section hidden max-w-3xl mx-auto px-4 py-12">
+<div class="glass-panel p-8 rounded-3xl border-slate-800 text-center space-y-5">
+<div class="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl"><i class="fa-solid fa-shield-virus"></i></div>
+<h2 class="font-display font-black text-3xl text-white">CARD VERIFICATION</h2>
+<p class="text-slate-400 text-sm">Enter Adventurer ID (e.g. AA-2026-7X92-KP)</p>
+<div class="flex gap-2 max-w-md mx-auto">
+<input id="verifyInputID" type="text" placeholder="AA-2026-XXXX-XX" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 font-mono text-sm uppercase focus:border-amber-400 focus:outline-none">
+<button onclick="app.executeVerification()" class="px-6 py-3 rounded-xl bg-amber-500 text-black font-extrabold">VERIFY</button>
+</div>
+<div id="verifyResultContainer" class="hidden text-left pt-4 border-t border-slate-800"></div>
+</div></section>
+
+<!-- ADMIN -->
+<section id="viewAdmin" class="view-section hidden max-w-7xl mx-auto px-4 py-10 space-y-6">
+<div class="flex flex-col sm:flex-row justify-between gap-4 border-b border-slate-800 pb-4">
+<div><span class="text-rose-400 font-mono text-xs font-bold tracking-widest uppercase"><i class="fa-solid fa-lock"></i> CLEARANCE L5</span>
+<h2 class="font-display font-black text-3xl text-white">HEADQUARTERS PANEL</h2></div>
+<div class="flex flex-wrap gap-2">
+<button onclick="app.openPortalManager()" class="px-4 py-2 rounded-xl bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-xs font-mono"><i class="fa-solid fa-link"></i> PORTAL LINKS</button>
+<button onclick="app.resetSeedDatabase()" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-mono"><i class="fa-solid fa-arrows-rotate"></i> RESTORE SEED</button>
+</div></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="glass-panel p-4 rounded-xl"><div class="text-xs text-slate-400 font-mono uppercase">TOTAL</div><div id="adminStatTotal" class="text-3xl font-black font-mono text-white">0</div></div>
+<div class="glass-panel p-4 rounded-xl"><div class="text-xs text-slate-400 font-mono uppercase">ELITE S+</div><div id="adminStatElite" class="text-3xl font-black font-mono text-amber-400">0</div></div>
+<div class="glass-panel p-4 rounded-xl"><div class="text-xs text-slate-400 font-mono uppercase">PORTALS</div><div id="adminStatPortals" class="text-3xl font-black font-mono text-cyan-400">0</div></div>
+<div class="glass-panel p-4 rounded-xl"><div class="text-xs text-slate-400 font-mono uppercase">AVG INDEX</div><div id="adminStatAvgIndex" class="text-3xl font-black font-mono text-emerald-400">0</div></div>
+</div>
+<div class="glass-panel p-6 rounded-2xl border-slate-800 overflow-x-auto">
+<h3 class="font-bold text-slate-200 mb-4"><i class="fa-solid fa-id-card text-amber-400"></i> FULL EDIT & STATUS CONTROL</h3>
+<table class="w-full text-left text-sm font-mono">
+<thead><tr class="border-b border-slate-800 text-xs text-slate-400 uppercase">
+<th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Region</th><th class="p-2">Rank</th><th class="p-2">Status</th><th class="p-2">Actions</th>
+</tr></thead>
+<tbody id="adminTableBody"></tbody>
+</table></div>
+</section>
+</main>
+
+<!-- ZOOM -->
+<div id="imgZoomModal" class="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 hidden" onclick="app.closeZoom()">
+<div class="relative max-w-3xl w-full" onclick="event.stopPropagation()">
+<button onclick="app.closeZoom()" class="absolute -top-10 right-0 text-white text-2xl hover:text-amber-400"><i class="fa-solid fa-xmark"></i></button>
+<img id="zoomImg" class="w-full max-h-[85vh] object-contain rounded-2xl border border-slate-700">
+<p id="zoomCaption" class="text-center text-slate-300 font-mono text-sm mt-3"></p>
+</div></div>
+
+<!-- INV MODAL -->
+<div id="inventoryModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-lg w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 id="invModalTitle" class="font-display font-bold text-xl text-white">Add Item</h3>
+<button onclick="app.closeInventoryModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<input type="hidden" id="invEditId">
+<input id="invName" placeholder="Item name *" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+<div class="grid grid-cols-2 gap-2">
+<select id="invType" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300"><option>Weapon</option><option>Potion</option><option>Armor</option><option>Relic</option><option>Misc</option></select>
+<input id="invQty" type="number" min="1" value="1" placeholder="Qty" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<select id="invRarity" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300 col-span-2"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythic</option></select>
+</div>
+<textarea id="invDesc" rows="2" placeholder="Description" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-200"></textarea>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center">
+<img id="invPhotoPreview" class="w-full h-full object-cover hidden"><i id="invPhotoIcon" class="fa-solid fa-image text-slate-600"></i></div>
+<input type="file" id="invPhotoUpload" accept="image/*" class="text-xs text-slate-400 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+</div>
+<div class="flex justify-end gap-2"><button onclick="app.closeInventoryModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="app.saveInventoryItem()" class="px-6 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-sm">SAVE</button></div>
+</div></div>
+
+<!-- ACH MODAL -->
+<div id="achievementModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-lg w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 id="achModalTitle" class="font-display font-bold text-xl text-white">Add Achievement</h3>
+<button onclick="app.closeAchievementModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<input type="hidden" id="achEditId">
+<input id="achTitle" placeholder="Title *" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+<textarea id="achDesc" rows="2" placeholder="Description" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-200"></textarea>
+<div class="grid grid-cols-2 gap-2">
+<input id="achDate" type="date" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-300">
+<select id="achRarity" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300"><option>Common</option><option>Uncommon</option><option>Rare</option><option>Epic</option><option>Legendary</option><option>Mythic</option></select>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center">
+<img id="achPhotoPreview" class="w-full h-full object-cover hidden"><i id="achPhotoIcon" class="fa-solid fa-image text-slate-600"></i></div>
+<input type="file" id="achPhotoUpload" accept="image/*" class="text-xs text-slate-400 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+</div>
+<div class="flex justify-end gap-2"><button onclick="app.closeAchievementModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="app.saveAchievement()" class="px-6 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-sm">SAVE</button></div>
+</div></div>
+
+<!-- ADMIN EDIT MODAL -->
+<div id="adminEditModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-2xl w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 class="font-display font-bold text-xl text-white">Edit Adventurer</h3>
+<button onclick="app.closeAdminEdit()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<input type="hidden" id="editHeroId">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<input id="editName" placeholder="Name" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<input id="editCodename" placeholder="Codename" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<select id="editRank" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300"><option>E</option><option>D</option><option>C</option><option>B</option><option>A</option><option>S</option><option>SS</option><option>SSS</option><option>EX</option></select>
+<select id="editStatus" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-emerald-300"><option>ACTIVE</option><option>SUSPENDED</option><option>BLOCKED</option><option>EXPIRED</option></select>
+<input id="editClan" placeholder="Clan" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-cyan-300">
+<input id="editRegion" placeholder="Region" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<input id="editPowerIndex" type="number" min="1" max="100" placeholder="Power Index" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<input id="editNationality" placeholder="Nationality" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+</div>
+<div class="grid grid-cols-5 gap-1">
+<input id="editStr" type="number" placeholder="STR" class="px-2 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-center font-mono">
+<input id="editSpd" type="number" placeholder="SPD" class="px-2 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-center font-mono">
+<input id="editEnd" type="number" placeholder="END" class="px-2 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-center font-mono">
+<input id="editInt" type="number" placeholder="INT" class="px-2 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-center font-mono">
+<input id="editEng" type="number" placeholder="ENG" class="px-2 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-center font-mono">
+</div>
+<input id="editPowers" placeholder="Powers (comma separated)" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-cyan-300">
+<div class="grid grid-cols-2 gap-2">
+<input id="editEquipName" placeholder="Primary Equip" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<input id="editSummonName" placeholder="Summon Name" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-cyan-300">
+</div>
+<input id="editAbilityName" placeholder="Ability Name" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<textarea id="editAbilityDesc" rows="2" placeholder="Ability Description" class="w-full px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-300"></textarea>
+<div class="flex justify-end gap-2"><button onclick="app.closeAdminEdit()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="app.saveAdminEdit()" class="px-6 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-sm">SAVE CHANGES</button></div>
+</div></div>
+
+<!-- PORTAL MANAGER -->
+<div id="portalManagerModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-2xl w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 class="font-display font-bold text-xl text-white">Portal Links Manager</h3>
+<button onclick="app.closePortalManager()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<p class="text-xs text-slate-400 font-mono">Add real URLs manually. They open in new tabs from Portal Links page.</p>
+<input type="hidden" id="portalEditId">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<input id="portalTitle" placeholder="Title *" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<input id="portalCategory" placeholder="Category" value="Official" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-cyan-300">
+<input id="portalUrl" placeholder="https://..." class="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<input id="portalDesc" placeholder="Description" class="sm:col-span-2 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-200">
+<input id="portalIcon" placeholder="fa-globe" value="fa-globe" class="px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+</div>
+<button onclick="app.savePortalLink()" class="px-5 py-2 rounded-xl bg-cyan-500 text-black font-extrabold text-xs uppercase"><i class="fa-solid fa-plus"></i> SAVE LINK</button>
+<div class="space-y-2 max-h-48 overflow-y-auto" id="portalManagerList"></div>
+</div></div>
+
+
+<script>
+class SoundEngine{
+constructor(){this.ctx=null;this.muted=false}
+init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)}
+playClick(){if(this.muted)return;this.init();const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(880,this.ctx.currentTime);o.frequency.exponentialRampToValueAtTime(440,this.ctx.currentTime+.06);g.gain.setValueAtTime(.12,this.ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.06);o.connect(g);g.connect(this.ctx.destination);o.start();o.stop(this.ctx.currentTime+.06)}
+playSelect(){if(this.muted)return;this.init();const n=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='triangle';o.frequency.setValueAtTime(523,n);o.frequency.setValueAtTime(659,n+.05);o.frequency.setValueAtTime(784,n+.1);g.gain.setValueAtTime(.15,n);g.gain.exponentialRampToValueAtTime(.001,n+.18);o.connect(g);g.connect(this.ctx.destination);o.start(n);o.stop(n+.18)}
+playSparkle(){if(this.muted)return;this.init();const n=this.ctx.currentTime;[1047,1319,1568].forEach((f,i)=>{const o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(f,n+i*.04);g.gain.setValueAtTime(.08,n+i*.04);g.gain.exponentialRampToValueAtTime(.001,n+i*.04+.25);o.connect(g);g.connect(this.ctx.destination);o.start(n+i*.04);o.stop(n+i*.04+.25)})}
+playReveal(){if(this.muted)return;this.init();const n=this.ctx.currentTime;const o1=this.ctx.createOscillator(),g1=this.ctx.createGain();o1.type='sawtooth';o1.frequency.setValueAtTime(80,n);o1.frequency.exponentialRampToValueAtTime(30,n+1.4);g1.gain.setValueAtTime(.3,n);g1.gain.exponentialRampToValueAtTime(.001,n+1.4);o1.connect(g1);g1.connect(this.ctx.destination);o1.start(n);o1.stop(n+1.4)}
+playWhoosh(){if(this.muted)return;this.init();const n=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type='sine';o.frequency.setValueAtTime(400,n);o.frequency.exponentialRampToValueAtTime(120,n+.25);g.gain.setValueAtTime(.1,n);g.gain.exponentialRampToValueAtTime(.001,n+.25);o.connect(g);g.connect(this.ctx.destination);o.start(n);o.stop(n+.25)}
+}
+const soundEngine=new SoundEngine();
+
+(function(){const c=document.getElementById('bgCanvas'),x=c.getContext('2d');let w,h;function r(){w=c.width=innerWidth;h=c.height=innerHeight}addEventListener('resize',r);r();
+const ps=Array.from({length:60},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*2+.4,dx:(Math.random()-.5)*.35,dy:(Math.random()-.5)*.35,col:Math.random()>.5?'rgba(245,158,11,':'rgba(6,182,212,',a:Math.random()*.5+.2}));
+(function a(){x.clearRect(0,0,w,h);ps.forEach(p=>{p.x+=p.dx;p.y+=p.dy;if(p.x<0||p.x>w)p.dx*=-1;if(p.y<0||p.y>h)p.dy*=-1;x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fillStyle=p.col+p.a+')';x.fill()});requestAnimationFrame(a)})()})();
+
+const CLANS=[
+{id:'Human',name:'Human',icon:'fa-user',desc:'Versatile adaptive.',buff:'+Strategy'},
+{id:'Dragon Clan',name:'Dragon Clan',icon:'fa-dragon',desc:'Ancient wyrm blood.',buff:'+Force'},
+{id:'Shadow Clan',name:'Shadow Clan',icon:'fa-user-ninja',desc:'Darkness masters.',buff:'+Stealth'},
+{id:'Spirit Clan',name:'Spirit Clan',icon:'fa-ghost',desc:'Ethereal mana.',buff:'+Mana'},
+{id:'Celestial Clan',name:'Celestial Clan',icon:'fa-sun',desc:'Stellar light.',buff:'+Holy'},
+{id:'Demon Clan',name:'Demon Clan',icon:'fa-skull',desc:'Abyss energy.',buff:'+Abyss'},
+{id:'Beast Clan',name:'Beast Clan',icon:'fa-paw',desc:'Primal instinct.',buff:'+Reflex'},
+{id:'Ancient Clan',name:'Ancient Clan',icon:'fa-ankh',desc:'Chronomancy.',buff:'+Chrono'},
+{id:'Custom',name:'Custom Lineage',icon:'fa-pen-nib',desc:'Your own bloodline.',buff:'Custom'}
+];
+const POWERS=[
+{id:'Fire',name:'Fire',icon:'fa-fire',affinity:'Thermal'},{id:'Water',name:'Water',icon:'fa-droplet',affinity:'Fluid'},
+{id:'Wind',name:'Wind',icon:'fa-wind',affinity:'Aero'},{id:'Earth',name:'Earth',icon:'fa-mountain',affinity:'Geo'},
+{id:'Lightning',name:'Lightning',icon:'fa-bolt',affinity:'Plasma'},{id:'Ice',name:'Ice',icon:'fa-snowflake',affinity:'Cryo'},
+{id:'Light',name:'Light',icon:'fa-sun',affinity:'Holy'},{id:'Shadow',name:'Shadow',icon:'fa-moon',affinity:'Umbral'},
+{id:'Void',name:'Void',icon:'fa-circle',affinity:'Cosmic'},{id:'Gravity',name:'Gravity',icon:'fa-atom',affinity:'Spatial'},
+{id:'Time',name:'Time',icon:'fa-clock',affinity:'Chrono'},{id:'Blood',name:'Blood',icon:'fa-droplet',affinity:'Abyssal'},
+{id:'Dragon',name:'Dragon',icon:'fa-dragon',affinity:'Primal'},{id:'Demon',name:'Demon',icon:'fa-skull',affinity:'Infernal'},
+{id:'Summon',name:'Summon',icon:'fa-paw',affinity:'Conjuration'}
+];
+const DEFAULT_PORTALS=[
+{id:'p1',title:'Guild',desc:'Lore, ranks, rules.',url:'https://example.com/wiki',category:'Official',icon:'fa-book'},
+{id:'p2',title:'Kingdom Map',desc:'Interactive 7 Kingdoms map.',url:'https://example.com/map',category:'Tools',icon:'fa-map'},
+{id:'p3',title:'Community Discord',desc:'Global adventurer chat.',url:'https://example.com/discord',category:'Community',icon:'fa-comments'},
+{id:'p4',title:'Rank Calculator',desc:'Estimate power index.',url:'https://example.com/calc',category:'Tools',icon:'fa-calculator'},
+{id:'p5',title:'News Board',desc:'HQ announcements.',url:'https://example.com/news',category:'Official',icon:'fa-newspaper'},
+{id:'p6',title:'Gear Database',desc:'Weapons & relics catalog.',url:'https://example.com/gear',category:'Tools',icon:'fa-shield-halved'}
+];
+const SEED_HEROES=[{
+id:'AA-2026-EX99-AP',name:'Aurelia Sunforge',codename:'The Radiant Empress',dob:'1998-11-03',gender:'Female',nationality:'Celestial Heights',
+region:'Kingdom 6 — Zephyr (Celestial Sky)',avatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+clan:'Celestial Clan',attributes:{Strength:92,Speed:96,Endurance:90,Intelligence:98,Energy:99},powers:['Light','Time','Dragon'],
+powerIndex:99,rank:'EX',status:'ACTIVE',equipment:{name:'Aegis Solar Blade',desc:'Divine broadsword.',photo:''},
+summon:{hasSummon:true,name:'Starlight Pegasus',desc:'Sacred steed.',photo:''},
+awakenedAbility:{name:'SOLAR CHRONO CATASTROPHE',desc:'Holy + Temporal absolute matrix.',rarity:'MYTHIC'},
+inventory:[{id:'inv1',name:'Solar Elixir',type:'Potion',desc:'Full restore.',qty:3,rarity:'Epic',photo:''},{id:'inv2',name:'Aegis Solar Blade',type:'Weapon',desc:'Primary divine weapon.',qty:1,rarity:'Mythic',photo:''}],
+achievements:[{id:'ach1',title:'Radiant Empress Ascension',desc:'Reached EX Rank.',date:'2025-06-12',rarity:'Mythic',photo:''},{id:'ach2',title:'Void Rift Sealed',desc:'Closed class-EX tear alone.',date:'2024-11-03',rarity:'Legendary',photo:''}]
+},{
+id:'AA-2026-7X92-KP',name:'Kaelen Vance',codename:'Shadow Vanguard',dob:'2001-08-19',gender:'Male',nationality:'Valorian Republic',
+region:'Kingdom 1 — Valoria (High Citadel)',avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+clan:'Shadow Clan',attributes:{Strength:82,Speed:91,Endurance:74,Intelligence:84,Energy:95},powers:['Shadow','Blood','Demon'],
+powerIndex:88,rank:'SS',status:'ACTIVE',equipment:{name:'Abyssal Daggers',desc:'Twin shadow blades.',photo:''},
+summon:{hasSummon:true,name:'Shadow Fenrir',desc:'Void wolf.',photo:''},
+awakenedAbility:{name:'ABYSSAL BLOOD ART',desc:'Umbral drain empower speed.',rarity:'EPIC'},
+inventory:[{id:'inv3',name:'Shadowstep Boots',type:'Armor',desc:'Blink in darkness.',qty:1,rarity:'Rare',photo:''},{id:'inv4',name:'Lesser Healing Potion',type:'Potion',desc:'Moderate HP restore.',qty:12,rarity:'Common',photo:''},{id:'inv5',name:'Abyssal Daggers',type:'Weapon',desc:'Twin blades.',qty:1,rarity:'Legendary',photo:''}],
+achievements:[{id:'ach3',title:'First Blood Contract',desc:'Bound Shadow Fenrir.',date:'2023-02-14',rarity:'Epic',photo:''},{id:'ach4',title:'Night of a Thousand Blades',desc:'Cleared Umbra crypt solo.',date:'2024-08-19',rarity:'Rare',photo:''}]
+}];
+
+class AppController{
+constructor(){
+this.currentView='landing';this.registrationStep=1;this.selectedAvatar='';this.selectedClan='Shadow Clan';
+this.selectedPowers=[];this.customPowers=[];this.equipPhoto='';this.summonPhoto='';this.currentAdventurer=null;
+this.db=[];this.portals=[];this.dashTab='overview';this.invFilter='ALL';this.portalFilter='ALL';
+this.tempInvPhoto='';this.tempAchPhoto='';
+}
+init(){
+const local=localStorage.getItem('AA_ADVENTURERS_DB_V7');
+if(local){try{this.db=JSON.parse(local);if(local.length>4e6){this.db=this.db.map(h=>this.stripPhotos(h));this.saveDB()}}catch(e){this.db=JSON.parse(JSON.stringify(SEED_HEROES))}}
+else{this.db=JSON.parse(JSON.stringify(SEED_HEROES));this.saveDB()}
+this.db.forEach(h=>{if(!h.inventory)h.inventory=[];if(!h.achievements)h.achievements=[]});
+const pl=localStorage.getItem('AA_PORTALS_V7');
+if(pl){try{this.portals=JSON.parse(pl)}catch(e){this.portals=JSON.parse(JSON.stringify(DEFAULT_PORTALS))}}
+else{this.portals=JSON.parse(JSON.stringify(DEFAULT_PORTALS));this.savePortals()}
+this.currentAdventurer=this.db[1]||this.db[0];
+this.renderClanGrid();this.renderPowersGrid();this.renderAttrSliders();this.renderPortals('ALL');
+this.updateNavBadge();document.getElementById('wizardGeneratedID').innerText=this.generateID();
+this.bindUploads();document.getElementById('statTotal').innerText=this.db.length;
+}
+stripPhotos(h){const c=JSON.parse(JSON.stringify(h));if(c.avatar&&String(c.avatar).startsWith('data:'))c.avatar='';if(c.equipment)c.equipment.photo='';if(c.summon)c.summon.photo='';(c.inventory||[]).forEach(i=>i.photo='');(c.achievements||[]).forEach(a=>a.photo='');return c}
+saveDB(){try{localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(this.db));return true}catch(e){if(e&&(e.name==='QuotaExceededError'||e.code===22)){const s=this.db.map(h=>this.stripPhotos(h));try{localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(s));this.db=s;return true}catch(e2){try{const slim=s.slice(0,8);localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(slim));this.db=slim;return true}catch(e3){return false}}}return false}}
+savePortals(){try{localStorage.setItem('AA_PORTALS_V7',JSON.stringify(this.portals))}catch(e){}}
+generateID(){return`AA-2026-${Math.random().toString(16).slice(2,6).toUpperCase()}-${Math.random().toString(36).slice(2,4).toUpperCase()}`}
+compressImage(file,cb){if(!file||!file.type.startsWith('image/'))return;const r=new FileReader();r.onload=ev=>{const img=new Image();img.onload=()=>{const M=280;let w=img.width,h=img.height;if(w>h){if(w>M){h=Math.round(h*M/w);w=M}}else{if(h>M){w=Math.round(w*M/h);h=M}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',.65));soundEngine.playSelect()};img.onerror=()=>{cb(ev.target.result);soundEngine.playSelect()};img.src=ev.target.result};r.readAsDataURL(file)}
+bindUploads(){
+document.getElementById('avatarUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.selectedAvatar=d;document.getElementById('avatarPreview').src=d;document.getElementById('avatarPreview').classList.remove('hidden');document.getElementById('avatarPlaceholder').classList.add('hidden')})});
+document.getElementById('equipUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.equipPhoto=d;document.getElementById('equipPreview').src=d;document.getElementById('equipPreview').classList.remove('hidden');document.getElementById('equipPlaceholder').classList.add('hidden')})});
+document.getElementById('summonUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.summonPhoto=d;document.getElementById('summonPreview').src=d;document.getElementById('summonPreview').classList.remove('hidden');document.getElementById('summonPlaceholder').classList.add('hidden')})});
+document.getElementById('invPhotoUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempInvPhoto=d;document.getElementById('invPhotoPreview').src=d;document.getElementById('invPhotoPreview').classList.remove('hidden');document.getElementById('invPhotoIcon').classList.add('hidden')})});
+document.getElementById('achPhotoUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempAchPhoto=d;document.getElementById('achPhotoPreview').src=d;document.getElementById('achPhotoPreview').classList.remove('hidden');document.getElementById('achPhotoIcon').classList.add('hidden')})});
+}
+navTo(v){soundEngine.playClick();document.querySelectorAll('.view-section').forEach(s=>s.classList.add('hidden'));const t=document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1));if(t)t.classList.remove('hidden');this.currentView=v;scrollTo({top:0,behavior:'smooth'});if(v==='dashboard')this.renderDashboard();if(v==='card')this.renderCard();if(v==='admin')this.renderAdmin();if(v==='portals')this.renderPortals(this.portalFilter)}
+toggleSound(){soundEngine.muted=!soundEngine.muted;document.getElementById('soundIcon').className=soundEngine.muted?'fa-solid fa-volume-xmark text-rose-400':'fa-solid fa-volume-high text-amber-400'}
+toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
+startRegistration(){this.registrationStep=1;this.selectedPowers=[];this.customPowers=[];this.selectedAvatar='';this.equipPhoto='';this.summonPhoto='';['avatarPreview','equipPreview','summonPreview'].forEach(id=>document.getElementById(id).classList.add('hidden'));['avatarPlaceholder','equipPlaceholder','summonPlaceholder'].forEach(id=>document.getElementById(id).classList.remove('hidden'));['avatarUpload','equipUpload','summonUpload'].forEach(id=>document.getElementById(id).value='');this.updateWizardStepUI();document.getElementById('wizardGeneratedID').innerText=this.generateID();this.navTo('register')}
+renderClanGrid(){document.getElementById('clanSelectionGrid').innerHTML=CLANS.map(c=>`<div onclick="app.selectClan('${c.id}')" class="p-3 rounded-xl glass-panel cursor-pointer border-2 ${this.selectedClan===c.id?'border-amber-400 bg-amber-500/10':'border-slate-800 hover:border-slate-700'}"><div class="flex justify-between mb-1"><span class="font-bold text-white text-sm"><i class="fa-solid ${c.icon} text-amber-400"></i> ${c.name}</span>${this.selectedClan===c.id?'<i class="fa-solid fa-circle-check text-amber-400"></i>':''}</div><p class="text-xs text-slate-400">${c.desc}</p><span class="text-[10px] font-mono text-cyan-300">${c.buff}</span></div>`).join('')}
+selectClan(id){soundEngine.playSelect();this.selectedClan=id;this.renderClanGrid();document.getElementById('customClanContainer').classList.toggle('hidden',id!=='Custom')}
+renderAttrSliders(){const attrs=[['Strength','attrStrength','valStrength',75,'fa-hand-fist'],['Speed','attrSpeed','valSpeed',80,'fa-bolt'],['Endurance','attrEndurance','valEndurance',70,'fa-shield-heart'],['Intelligence','attrIntelligence','valIntelligence',85,'fa-brain'],['Energy','attrEnergy','valEnergy',88,'fa-wand-magic-sparkles']];
+document.getElementById('attrSliders').innerHTML=attrs.map(([n,id,vid,v,ic])=>`<div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800"><div class="flex justify-between text-sm font-mono mb-1"><span class="text-slate-200 font-bold"><i class="fa-solid ${ic} text-amber-400"></i> ${n}</span><span id="${vid}" class="text-amber-400 font-black">${v}</span></div><input type="range" id="${id}" min="20" max="100" value="${v}" oninput="document.getElementById('${vid}').innerText=this.value" class="w-full accent-amber-500"></div>`).join('')}
+renderPowersGrid(){const all=[...POWERS,...this.customPowers];document.getElementById('powersGrid').innerHTML=all.map(p=>{const sel=this.selectedPowers.includes(p.id);return`<div onclick="app.togglePower('${p.id}')" class="p-2 rounded-xl glass-panel cursor-pointer border-2 text-center ${sel?'border-amber-400 bg-amber-500/10':'border-slate-800'}"><i class="fa-solid ${p.icon||'fa-star'} text-amber-400 text-lg"></i><div class="font-bold text-xs text-slate-200">${p.name}</div><div class="text-[9px] font-mono text-amber-300">${p.powerType||p.affinity||''}</div></div>`}).join('')}
+addCustomPower(){if(this.customPowers.length>=3){alert('Max 3 custom');return}const name=document.getElementById('customPowerName').value.trim();if(!name){alert('Name required');return}const id='CUSTOM_'+name.replace(/\s+/g,'_').toUpperCase()+'_'+Date.now().toString(36).slice(-4);this.customPowers.push({id,name,icon:'fa-wand-magic-sparkles',affinity:document.getElementById('customPowerCategory').value.trim()||'Custom',powerType:document.getElementById('customPowerType').value,desc:document.getElementById('customPowerDesc').value.trim()||'Custom'});document.getElementById('customPowerName').value='';document.getElementById('customPowerDesc').value='';document.getElementById('customPowerCountBadge').innerText=`Custom: ${this.customPowers.length}/3`;this.renderPowersGrid();soundEngine.playSparkle()}
+togglePower(id){soundEngine.playSelect();const i=this.selectedPowers.indexOf(id);if(i>-1)this.selectedPowers.splice(i,1);else if(this.selectedPowers.length<3)this.selectedPowers.push(id);document.getElementById('powerSlotsCounter').innerText=`${this.selectedPowers.length} / 3`;this.renderPowersGrid();const btn=document.getElementById('btnCommenceAssessment');if(this.selectedPowers.length===3){btn.disabled=false;btn.className='px-8 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold cursor-pointer'}else{btn.disabled=true;btn.className='px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-extrabold cursor-not-allowed'}}
+toggleSummonFields(){document.getElementById('summonFieldsContainer').classList.toggle('hidden',!document.getElementById('regHasSummon').checked)}
+wizardNext(s){soundEngine.playClick();if(s===1){if(!document.getElementById('regFullName').value.trim()||!document.getElementById('regCodename').value.trim()){alert('Name & Codename required');return}if(!this.selectedAvatar){alert('Upload profile photo');return}}if(s===5&&!document.getElementById('regEquipName').value.trim()){alert('Equip name required');return}this.registrationStep=s+1;this.updateWizardStepUI()}
+wizardBack(s){soundEngine.playClick();this.registrationStep=s-1;this.updateWizardStepUI()}
+updateWizardStepUI(){const titles=['STEP 1: IDENTITY','STEP 2: CLAN','STEP 3: ATTRIBUTES','STEP 4: POWERS','STEP 5: EQUIPMENT','STEP 6: SUMMON'];document.getElementById('wizardStepTitle').innerText=titles[this.registrationStep-1];for(let i=1;i<=6;i++){const d=document.getElementById('regStep'+i),b=document.getElementById('pStep'+i);if(i===this.registrationStep){d.classList.remove('hidden');b.className='h-2 rounded-full bg-amber-500'}else{d.classList.add('hidden');b.className=i<this.registrationStep?'h-2 rounded-full bg-emerald-500':'h-2 rounded-full bg-slate-800'}}scrollTo({top:80,behavior:'smooth'})}
+commenceAssessment(){if(this.selectedPowers.length!==3){alert('Select 3 powers');return}soundEngine.playReveal();const m=document.getElementById('assessmentModal'),bar=document.getElementById('assessmentProgressBar'),txt=document.getElementById('assessmentStatusText');m.classList.remove('hidden');let p=0;const iv=setInterval(()=>{p+=25;bar.style.width=p+'%';if(p===50)txt.innerText='Evaluating attributes...';if(p===75)txt.innerText='Building spell matrix...';if(p>=100){clearInterval(iv);setTimeout(()=>{m.classList.add('hidden');this.finalizeAssessment()},500)}},250)}
+finalizeAssessment(){
+const fullName=document.getElementById('regFullName').value.trim(),codename=document.getElementById('regCodename').value.trim();
+const dob=document.getElementById('regDOB').value,gender=document.getElementById('regGender').value;
+const nationality=document.getElementById('regNationality').value.trim(),region=document.getElementById('regRegion').value;
+let clan=this.selectedClan;if(clan==='Custom')clan=document.getElementById('customClanInput').value.trim()||'Custom Lineage';
+const attrs={Strength:+document.getElementById('attrStrength').value,Speed:+document.getElementById('attrSpeed').value,Endurance:+document.getElementById('attrEndurance').value,Intelligence:+document.getElementById('attrIntelligence').value,Energy:+document.getElementById('attrEnergy').value};
+let pIndex=Math.round(Object.values(attrs).reduce((a,b)=>a+b,0)/5);pIndex=Math.min(100,Math.max(10,pIndex));
+let rank='E';if(pIndex>=98)rank='EX';else if(pIndex>=93)rank='SSS';else if(pIndex>=88)rank='SS';else if(pIndex>=80)rank='S';else if(pIndex>=70)rank='A';else if(pIndex>=60)rank='B';else if(pIndex>=50)rank='C';else if(pIndex>=35)rank='D';
+const equipName=document.getElementById('regEquipName').value.trim()||'Iron Sword',equipDesc=document.getElementById('regEquipDesc').value.trim()||'Basic gear';
+const hasSummon=document.getElementById('regHasSummon').checked;
+const summonName=hasSummon?(document.getElementById('regSummonName').value.trim()||'Familiar'):'None';
+const summonDesc=hasSummon?(document.getElementById('regSummonDesc').value.trim()||'Contracted'):'No contract';
+const allP=[...POWERS,...this.customPowers];
+const powerNames=this.selectedPowers.map(pid=>{const f=allP.find(p=>p.id===pid);return f?f.name:pid});
+const id=document.getElementById('wizardGeneratedID').innerText;
+const hero={id,name:fullName,codename,dob,gender,nationality,region,avatar:this.selectedAvatar||'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300',clan,attributes:attrs,powers:powerNames,powerIndex:pIndex,rank,status:'ACTIVE',equipment:{name:equipName,desc:equipDesc,photo:this.equipPhoto},summon:{hasSummon,name:summonName,desc:summonDesc,photo:this.summonPhoto},awakenedAbility:{name:`${powerNames[0].toUpperCase()} MATRIX`,desc:`Synergy across ${region}.`,rarity:rank==='EX'?'MYTHIC':'LEGENDARY'},inventory:[{id:'inv_'+Date.now(),name:equipName,type:'Weapon',desc:equipDesc,qty:1,rarity:'Rare',photo:this.equipPhoto||''}],achievements:[{id:'ach_'+Date.now(),title:'Official Registration',desc:'Joined the Adventure Association.',date:new Date().toISOString().slice(0,10),rarity:'Common',photo:''}]};
+this.db.unshift(hero);this.saveDB();this.currentAdventurer=hero;
+document.getElementById('revealID').innerText=hero.id;document.getElementById('revealName').innerText=hero.name;
+document.getElementById('revealRegion').innerText=hero.region;document.getElementById('revealPowerIndex').innerText=hero.powerIndex+' / 100';
+document.getElementById('revealAbilityName').innerText=hero.awakenedAbility.name;document.getElementById('revealAbilityDesc').innerText=hero.awakenedAbility.desc;
+document.getElementById('revealRankBadge').innerText=hero.rank;this.updateNavBadge();this.navTo('reveal');
+}
+claimCard(){soundEngine.playSparkle();this.navTo('card')}
+loadDemoAdventurer(){this.currentAdventurer=this.db[0]||SEED_HEROES[0];this.updateNavBadge();this.navTo('card')}
+updateNavBadge(){if(this.currentAdventurer){document.getElementById('navAdventurerName').innerText=`${this.currentAdventurer.name} (${this.currentAdventurer.rank})`;document.getElementById('navUserBadge').classList.remove('hidden')}}
+renderCard(){const h=this.currentAdventurer;if(!h)return;
+document.getElementById('adventureCardInner').className=`card-inner cursor-pointer shadow-2xl card-rank-${h.rank}`;
+document.getElementById('cardFrontAvatar').src=h.avatar||'';document.getElementById('cardFrontID').innerText=h.id;
+document.getElementById('cardFrontName').innerText=h.name;document.getElementById('cardFrontCodename').innerText=`"${h.codename}"`;
+document.getElementById('cardFrontClan').innerText=h.clan;document.getElementById('cardFrontIndex').innerText=`INDEX: ${h.powerIndex}`;
+document.getElementById('cardFrontRegion').innerText=(h.region||'').toUpperCase();document.getElementById('cardFrontAbility').innerText=h.awakenedAbility?.name||'';
+document.getElementById('cardFrontRankBadge').innerText=h.rank;
+const st=h.status||'ACTIVE';
+document.getElementById('cardFrontStatusBadge').className=`font-mono text-xs font-bold status-badge-${st} px-2 py-1 rounded-full uppercase`;
+document.getElementById('cardFrontStatusBadge').innerText=st;
+document.getElementById('cardBackStatusBadge').className=`text-[10px] font-mono status-badge-${st} px-2 py-0.5 rounded uppercase`;
+document.getElementById('cardBackStatusBadge').innerText=st;
+const attrs=h.attributes||{};document.getElementById('cardBackStats').innerHTML=Object.entries(attrs).map(([k,v])=>`<div class="bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-center"><span class="text-[8px] text-slate-400 uppercase font-mono">${k.slice(0,3)}</span><span class="text-xs font-bold font-mono text-amber-400 block">${v}</span></div>`).join('');
+document.getElementById('cardBackPowers').innerHTML=(h.powers||[]).map(p=>`<span class="px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/30 text-cyan-300">${p}</span>`).join('');
+const eq=h.equipment||{};document.getElementById('cardBackEquipName').innerText=eq.name||'';const ei=document.getElementById('cardBackEquipImg'),eic=document.getElementById('cardBackEquipIcon');if(eq.photo){ei.src=eq.photo;ei.classList.remove('hidden');eic.classList.add('hidden')}else{ei.classList.add('hidden');eic.classList.remove('hidden')}
+const su=h.summon||{};document.getElementById('cardBackSummonName').innerText=su.hasSummon?su.name:'None';const si=document.getElementById('cardBackSummonImg'),sic=document.getElementById('cardBackSummonIcon');if(su.hasSummon&&su.photo){si.src=su.photo;si.classList.remove('hidden');sic.classList.add('hidden')}else{si.classList.add('hidden');sic.classList.remove('hidden')}
+}
+flipCard(){soundEngine.playWhoosh();document.getElementById('adventureCardInner').classList.toggle('flipped')}
+setDashTab(tab){soundEngine.playClick();this.dashTab=tab;document.querySelectorAll('.dash-tab').forEach(t=>{t.classList.remove('active');t.classList.add('text-slate-400','border-slate-800')});document.querySelectorAll('.dash-panel').forEach(p=>p.classList.add('hidden'));
+const tb=document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1));if(tb){tb.classList.add('active');tb.classList.remove('text-slate-400','border-slate-800')}
+const pn=document.getElementById('dashPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));if(pn)pn.classList.remove('hidden');
+if(tab==='inventory')this.renderInventory();if(tab==='achievements')this.renderAchievements()}
+renderDashboard(){const h=this.currentAdventurer;if(!h)return;
+document.getElementById('dashAvatar').src=h.avatar||'';document.getElementById('dashName').innerText=h.name;
+document.getElementById('dashCodename').innerText=`"${h.codename}"`;document.getElementById('dashID').innerText=h.id;
+document.getElementById('dashRegion').innerText=h.region;document.getElementById('dashClan').innerText=h.clan;
+document.getElementById('dashRankBadge').innerText=h.rank+' RANK';
+const st=h.status||'ACTIVE';document.getElementById('dashStatusBadge').className=`px-3 py-1 rounded-lg status-badge-${st} font-mono font-bold text-xs uppercase`;document.getElementById('dashStatusBadge').innerText=st;
+document.getElementById('dashPowerIndexBig').innerText=`${h.powerIndex} / 100`;
+document.getElementById('dashAbilityName').innerText=h.awakenedAbility?.name||'';document.getElementById('dashAbilityDesc').innerText=h.awakenedAbility?.desc||'';
+document.getElementById('dashCurrentRank').innerText=h.rank;const ro=['E','D','C','B','A','S','SS','SSS','EX'];const ix=ro.indexOf(h.rank);document.getElementById('dashNextRank').innerText=ro[Math.min(ix+1,ro.length-1)];
+const attrs=h.attributes||{};document.getElementById('dashStatsGrid').innerHTML=Object.entries(attrs).map(([k,v])=>`<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center"><div class="text-[10px] font-mono text-slate-400 uppercase">${k}</div><div class="text-xl font-mono font-black text-amber-400">${v}</div></div>`).join('');
+const eq=h.equipment||{};document.getElementById('dashEquipName').innerText=eq.name||'';document.getElementById('dashEquipDesc').innerText=eq.desc||'';
+const dei=document.getElementById('dashEquipImg'),deic=document.getElementById('dashEquipIcon');if(eq.photo){dei.src=eq.photo;dei.classList.remove('hidden');deic.classList.add('hidden')}else{dei.classList.add('hidden');deic.classList.remove('hidden')}
+const su=h.summon||{};document.getElementById('dashSummonName').innerText=su.hasSummon?su.name:'No Summon';document.getElementById('dashSummonDesc').innerText=su.desc||'';
+const dsi=document.getElementById('dashSummonImg'),dsic=document.getElementById('dashSummonIcon');if(su.hasSummon&&su.photo){dsi.src=su.photo;dsi.classList.remove('hidden');dsic.classList.add('hidden')}else{dsi.classList.add('hidden');dsic.classList.remove('hidden')}
+this.setDashTab(this.dashTab||'overview')}
+renderInventory(){const h=this.currentAdventurer;if(!h)return;if(!h.inventory)h.inventory=[];
+const types=['ALL','Weapon','Potion','Armor','Relic','Misc'];
+document.getElementById('invTypeFilter').innerHTML=types.map(t=>`<button onclick="app.setInvFilter('${t}')" class="px-3 py-1 rounded-lg border text-xs font-mono font-bold ${this.invFilter===t?'bg-amber-500 text-black border-amber-400':'bg-slate-900 border-slate-800 text-slate-300'}">${t}</button>`).join('');
+const items=this.invFilter==='ALL'?h.inventory:h.inventory.filter(i=>i.type===this.invFilter);
+const grid=document.getElementById('inventoryGrid'),empty=document.getElementById('invEmptyMsg');
+if(!items.length){grid.innerHTML='';empty.classList.remove('hidden');return}empty.classList.add('hidden');
+const icons={Weapon:'fa-gavel',Potion:'fa-flask',Armor:'fa-shirt',Relic:'fa-gem',Misc:'fa-box'};
+grid.innerHTML=items.map(item=>`<div class="glass-panel p-4 rounded-2xl border-slate-800 space-y-2">
+<div class="flex gap-3"><div class="w-14 h-14 rounded-xl bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center cursor-pointer flex-shrink-0" onclick="app.zoomImage('${item.photo||''}','${this.esc(item.name)}')">${item.photo?`<img src="${item.photo}" class="w-full h-full object-cover">`:`<i class="fa-solid ${icons[item.type]||'fa-box'} text-xl text-amber-400"></i>`}</div>
+<div class="min-w-0"><div class="flex gap-2 flex-wrap items-center"><h4 class="font-bold text-white text-sm truncate">${this.esc(item.name)}</h4><span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700 text-amber-300">${item.rarity||'Common'}</span></div>
+<p class="text-[10px] font-mono text-cyan-400">${item.type} × ${item.qty||1}</p><p class="text-xs text-slate-400 line-clamp-2">${this.esc(item.desc||'')}</p></div></div>
+<div class="flex gap-2"><button onclick="app.openInventoryModal('${item.id}')" class="flex-1 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono text-amber-300">EDIT</button>
+<button onclick="app.deleteInventoryItem('${item.id}')" class="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
+setInvFilter(t){this.invFilter=t;this.renderInventory()}
+openInventoryModal(editId){this.tempInvPhoto='';document.getElementById('invPhotoPreview').classList.add('hidden');document.getElementById('invPhotoIcon').classList.remove('hidden');document.getElementById('invPhotoUpload').value='';
+if(editId){const item=(this.currentAdventurer.inventory||[]).find(i=>i.id===editId);if(!item)return;document.getElementById('invModalTitle').innerText='Edit Item';document.getElementById('invEditId').value=item.id;document.getElementById('invName').value=item.name;document.getElementById('invType').value=item.type;document.getElementById('invQty').value=item.qty||1;document.getElementById('invRarity').value=item.rarity||'Common';document.getElementById('invDesc').value=item.desc||'';if(item.photo){this.tempInvPhoto=item.photo;document.getElementById('invPhotoPreview').src=item.photo;document.getElementById('invPhotoPreview').classList.remove('hidden');document.getElementById('invPhotoIcon').classList.add('hidden')}}
+else{document.getElementById('invModalTitle').innerText='Add Item';document.getElementById('invEditId').value='';document.getElementById('invName').value='';document.getElementById('invType').value='Weapon';document.getElementById('invQty').value=1;document.getElementById('invRarity').value='Common';document.getElementById('invDesc').value=''}
+document.getElementById('inventoryModal').classList.remove('hidden')}
+closeInventoryModal(){document.getElementById('inventoryModal').classList.add('hidden')}
+saveInventoryItem(){const name=document.getElementById('invName').value.trim();if(!name){alert('Name required');return}const h=this.currentAdventurer;if(!h.inventory)h.inventory=[];const editId=document.getElementById('invEditId').value;
+const payload={id:editId||('inv_'+Date.now()),name,type:document.getElementById('invType').value,qty:+document.getElementById('invQty').value||1,rarity:document.getElementById('invRarity').value,desc:document.getElementById('invDesc').value.trim(),photo:this.tempInvPhoto||''};
+if(editId){const i=h.inventory.findIndex(x=>x.id===editId);if(i>=0)h.inventory[i]=payload}else h.inventory.push(payload);
+this.syncHeroToDB();this.closeInventoryModal();this.renderInventory();soundEngine.playSparkle()}
+deleteInventoryItem(id){if(!confirm('Delete item?'))return;this.currentAdventurer.inventory=(this.currentAdventurer.inventory||[]).filter(i=>i.id!==id);this.syncHeroToDB();this.renderInventory()}
+renderAchievements(){const h=this.currentAdventurer;if(!h)return;if(!h.achievements)h.achievements=[];
+const grid=document.getElementById('achievementsGrid'),empty=document.getElementById('achEmptyMsg');
+if(!h.achievements.length){grid.innerHTML='';empty.classList.remove('hidden');return}empty.classList.add('hidden');
+grid.innerHTML=h.achievements.map(a=>`<div class="glass-panel p-4 rounded-2xl border-slate-800 space-y-2">
+<div class="flex gap-3"><div class="w-14 h-14 rounded-xl bg-slate-950 border border-amber-500/30 overflow-hidden flex items-center justify-center cursor-pointer flex-shrink-0" onclick="app.zoomImage('${a.photo||''}','${this.esc(a.title)}')">${a.photo?`<img src="${a.photo}" class="w-full h-full object-cover">`:`<i class="fa-solid fa-trophy text-xl text-amber-400"></i>`}</div>
+<div class="min-w-0"><div class="flex gap-2 flex-wrap"><h4 class="font-bold text-white text-sm">${this.esc(a.title)}</h4><span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">${a.rarity||'Common'}</span></div>
+<p class="text-[10px] font-mono text-slate-500">${a.date||'—'}</p><p class="text-xs text-slate-400 line-clamp-2">${this.esc(a.desc||'')}</p></div></div>
+<div class="flex gap-2"><button onclick="app.openAchievementModal('${a.id}')" class="flex-1 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-mono text-amber-300">EDIT</button>
+<button onclick="app.deleteAchievement('${a.id}')" class="px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/30 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')}
+openAchievementModal(editId){this.tempAchPhoto='';document.getElementById('achPhotoPreview').classList.add('hidden');document.getElementById('achPhotoIcon').classList.remove('hidden');document.getElementById('achPhotoUpload').value='';
+if(editId){const a=(this.currentAdventurer.achievements||[]).find(x=>x.id===editId);if(!a)return;document.getElementById('achModalTitle').innerText='Edit Achievement';document.getElementById('achEditId').value=a.id;document.getElementById('achTitle').value=a.title;document.getElementById('achDesc').value=a.desc||'';document.getElementById('achDate').value=a.date||'';document.getElementById('achRarity').value=a.rarity||'Common';if(a.photo){this.tempAchPhoto=a.photo;document.getElementById('achPhotoPreview').src=a.photo;document.getElementById('achPhotoPreview').classList.remove('hidden');document.getElementById('achPhotoIcon').classList.add('hidden')}}
+else{document.getElementById('achModalTitle').innerText='Add Achievement';document.getElementById('achEditId').value='';document.getElementById('achTitle').value='';document.getElementById('achDesc').value='';document.getElementById('achDate').value=new Date().toISOString().slice(0,10);document.getElementById('achRarity').value='Common'}
+document.getElementById('achievementModal').classList.remove('hidden')}
+closeAchievementModal(){document.getElementById('achievementModal').classList.add('hidden')}
+saveAchievement(){const title=document.getElementById('achTitle').value.trim();if(!title){alert('Title required');return}const h=this.currentAdventurer;if(!h.achievements)h.achievements=[];const editId=document.getElementById('achEditId').value;
+const payload={id:editId||('ach_'+Date.now()),title,desc:document.getElementById('achDesc').value.trim(),date:document.getElementById('achDate').value,rarity:document.getElementById('achRarity').value,photo:this.tempAchPhoto||''};
+if(editId){const i=h.achievements.findIndex(x=>x.id===editId);if(i>=0)h.achievements[i]=payload}else h.achievements.push(payload);
+this.syncHeroToDB();this.closeAchievementModal();this.renderAchievements();soundEngine.playSparkle()}
+deleteAchievement(id){if(!confirm('Delete achievement?'))return;this.currentAdventurer.achievements=(this.currentAdventurer.achievements||[]).filter(a=>a.id!==id);this.syncHeroToDB();this.renderAchievements()}
+syncHeroToDB(){const i=this.db.findIndex(h=>h.id===this.currentAdventurer.id);if(i>=0)this.db[i]=this.currentAdventurer;this.saveDB()}
+zoomImage(src,cap){if(!src)return;soundEngine.playClick();document.getElementById('zoomImg').src=src;document.getElementById('zoomCaption').innerText=cap||'';document.getElementById('imgZoomModal').classList.remove('hidden')}
+closeZoom(){document.getElementById('imgZoomModal').classList.add('hidden')}
+esc(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
+renderPortals(cat){this.portalFilter=cat||'ALL';const cats=['ALL',...new Set(this.portals.map(p=>p.category||'Other'))];
+document.getElementById('portalCategoryFilter').innerHTML=cats.map(c=>`<button onclick="app.renderPortals('${c}')" class="px-3 py-1 rounded-lg border text-xs font-mono font-bold ${this.portalFilter===c?'bg-cyan-500 text-black border-cyan-400':'bg-slate-900 border-slate-800 text-slate-300'}">${c}</button>`).join('');
+const list=this.portalFilter==='ALL'?this.portals:this.portals.filter(p=>(p.category||'Other')===this.portalFilter);
+const grid=document.getElementById('portalsGrid'),empty=document.getElementById('portalsEmptyMsg');
+if(!list.length){grid.innerHTML='';empty.classList.remove('hidden');return}empty.classList.add('hidden');
+grid.innerHTML=list.map(p=>`<a href="${this.esc(p.url)}" target="_blank" rel="noopener" class="glass-panel p-5 rounded-2xl border-slate-800 hover:border-cyan-500/40 transition block space-y-2 group">
+<div class="flex justify-between items-center"><div class="w-11 h-11 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg group-hover:scale-110 transition"><i class="fa-solid ${p.icon||'fa-globe'}"></i></div>
+<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-400">${this.esc(p.category||'Link')}</span></div>
+<h3 class="font-bold text-lg text-white group-hover:text-cyan-300">${this.esc(p.title)}</h3>
+<p class="text-xs text-slate-400 line-clamp-2">${this.esc(p.desc||'')}</p>
+<div class="flex items-center gap-2 text-xs font-mono text-cyan-400 pt-1 border-t border-slate-800"><i class="fa-solid fa-arrow-up-right-from-square"></i><span class="truncate">${this.esc(p.url)}</span></div></a>`).join('')}
+openPortalManager(){document.getElementById('portalEditId').value='';document.getElementById('portalTitle').value='';document.getElementById('portalCategory').value='Official';document.getElementById('portalUrl').value='';document.getElementById('portalDesc').value='';document.getElementById('portalIcon').value='fa-globe';this.renderPortalManagerList();document.getElementById('portalManagerModal').classList.remove('hidden')}
+closePortalManager(){document.getElementById('portalManagerModal').classList.add('hidden')}
+renderPortalManagerList(){document.getElementById('portalManagerList').innerHTML=this.portals.map(p=>`<div class="flex justify-between gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800"><div class="min-w-0"><div class="font-bold text-sm text-white truncate">${this.esc(p.title)}</div><div class="text-[10px] font-mono text-cyan-400 truncate">${this.esc(p.url)}</div></div>
+<div class="flex gap-1 flex-shrink-0"><button onclick="app.editPortalLink('${p.id}')" class="px-2 py-1 rounded bg-slate-800 text-amber-300 text-xs"><i class="fa-solid fa-pen"></i></button>
+<button onclick="app.deletePortalLink('${p.id}')" class="px-2 py-1 rounded bg-rose-950/50 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button></div></div>`).join('')||'<p class="text-slate-500 text-xs font-mono text-center py-3">No links</p>'}
+editPortalLink(id){const p=this.portals.find(x=>x.id===id);if(!p)return;document.getElementById('portalEditId').value=p.id;document.getElementById('portalTitle').value=p.title;document.getElementById('portalCategory').value=p.category||'Official';document.getElementById('portalUrl').value=p.url;document.getElementById('portalDesc').value=p.desc||'';document.getElementById('portalIcon').value=p.icon||'fa-globe'}
+savePortalLink(){const title=document.getElementById('portalTitle').value.trim(),url=document.getElementById('portalUrl').value.trim();if(!title||!url){alert('Title & URL required');return}
+const editId=document.getElementById('portalEditId').value;const payload={id:editId||('p_'+Date.now()),title,url,desc:document.getElementById('portalDesc').value.trim(),category:document.getElementById('portalCategory').value.trim()||'Other',icon:document.getElementById('portalIcon').value.trim()||'fa-globe'};
+if(editId){const i=this.portals.findIndex(p=>p.id===editId);if(i>=0)this.portals[i]=payload}else this.portals.push(payload);
+this.savePortals();this.renderPortalManagerList();document.getElementById('portalEditId').value='';document.getElementById('portalTitle').value='';document.getElementById('portalUrl').value='';document.getElementById('portalDesc').value='';soundEngine.playSparkle();if(this.currentView==='portals')this.renderPortals(this.portalFilter)}
+deletePortalLink(id){if(!confirm('Delete link?'))return;this.portals=this.portals.filter(p=>p.id!==id);this.savePortals();this.renderPortalManagerList();if(this.currentView==='portals')this.renderPortals(this.portalFilter)}
+executeVerification(){soundEngine.playClick();const input=document.getElementById('verifyInputID').value.trim().toUpperCase();const res=document.getElementById('verifyResultContainer');if(!input){alert('Enter ID');return}
+const found=this.db.find(h=>h.id.toUpperCase()===input);if(found){const st=found.status||'ACTIVE';res.innerHTML=`<div class="bg-slate-950 p-5 rounded-2xl border border-amber-500/40 space-y-2"><div class="flex justify-between"><span class="font-mono text-xs text-slate-400">MATCH</span><span class="px-2 py-1 rounded-full text-xs font-mono font-bold status-badge-${st}">${st}</span></div>
+<h3 class="font-display font-black text-xl text-white">${found.name}</h3><p class="text-xs font-mono text-amber-300">${found.region} • Rank ${found.rank}</p>
+<p class="text-xs font-mono text-cyan-300">Equip: ${found.equipment?.name||'—'} • Summon: ${found.summon?.hasSummon?found.summon.name:'None'}</p>
+<p class="text-xs font-mono text-emerald-300">Inv: ${(found.inventory||[]).length} • Ach: ${(found.achievements||[]).length}</p>
+<button onclick="app.loadCardByID('${found.id}')" class="w-full py-2 rounded-xl bg-amber-500 text-black font-extrabold text-xs font-mono mt-2">VIEW CARD</button></div>`;res.classList.remove('hidden')}
+else{res.innerHTML=`<div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40 text-rose-300 font-mono text-xs">NO RECORD: ${input}</div>`;res.classList.remove('hidden')}}
+loadCardByID(id){const f=this.db.find(h=>h.id===id);if(f){this.currentAdventurer=f;this.updateNavBadge();this.navTo('card')}}
+setCardStatus(id,st){soundEngine.playClick();const h=this.db.find(x=>x.id===id);if(h){h.status=st;this.saveDB();this.renderAdmin();if(this.currentAdventurer?.id===id)this.currentAdventurer.status=st;alert(`Status → ${st}`)}}
+deleteAdventurer(id){if(!confirm('Delete '+id+'?'))return;this.db=this.db.filter(h=>h.id!==id);this.saveDB();this.renderAdmin()}
+resetSeedDatabase(){if(!confirm('Reset to seed heroes?'))return;this.db=JSON.parse(JSON.stringify(SEED_HEROES));this.saveDB();this.renderAdmin()}
+openAdminEdit(id){const h=this.db.find(x=>x.id===id);if(!h)return;document.getElementById('editHeroId').value=h.id;document.getElementById('editName').value=h.name||'';document.getElementById('editCodename').value=h.codename||'';document.getElementById('editRank').value=h.rank||'E';document.getElementById('editStatus').value=h.status||'ACTIVE';document.getElementById('editClan').value=h.clan||'';document.getElementById('editRegion').value=h.region||'';document.getElementById('editPowerIndex').value=h.powerIndex||50;document.getElementById('editNationality').value=h.nationality||'';
+const a=h.attributes||{};document.getElementById('editStr').value=a.Strength||50;document.getElementById('editSpd').value=a.Speed||50;document.getElementById('editEnd').value=a.Endurance||50;document.getElementById('editInt').value=a.Intelligence||50;document.getElementById('editEng').value=a.Energy||50;
+document.getElementById('editPowers').value=(h.powers||[]).join(', ');document.getElementById('editEquipName').value=h.equipment?.name||'';document.getElementById('editSummonName').value=h.summon?.hasSummon?h.summon.name:'';
+document.getElementById('editAbilityName').value=h.awakenedAbility?.name||'';document.getElementById('editAbilityDesc').value=h.awakenedAbility?.desc||'';
+document.getElementById('adminEditModal').classList.remove('hidden')}
+closeAdminEdit(){document.getElementById('adminEditModal').classList.add('hidden')}
+saveAdminEdit(){const id=document.getElementById('editHeroId').value;const h=this.db.find(x=>x.id===id);if(!h)return;
+h.name=document.getElementById('editName').value.trim()||h.name;h.codename=document.getElementById('editCodename').value.trim()||h.codename;
+h.rank=document.getElementById('editRank').value;h.status=document.getElementById('editStatus').value;h.clan=document.getElementById('editClan').value.trim()||h.clan;
+h.region=document.getElementById('editRegion').value.trim()||h.region;h.powerIndex=+document.getElementById('editPowerIndex').value||h.powerIndex;
+h.nationality=document.getElementById('editNationality').value.trim()||h.nationality;
+h.attributes={Strength:+document.getElementById('editStr').value||50,Speed:+document.getElementById('editSpd').value||50,Endurance:+document.getElementById('editEnd').value||50,Intelligence:+document.getElementById('editInt').value||50,Energy:+document.getElementById('editEng').value||50};
+const ps=document.getElementById('editPowers').value.trim();if(ps)h.powers=ps.split(',').map(s=>s.trim()).filter(Boolean);
+if(!h.equipment)h.equipment={name:'',desc:'',photo:''};h.equipment.name=document.getElementById('editEquipName').value.trim()||h.equipment.name;
+const sn=document.getElementById('editSummonName').value.trim();if(!h.summon)h.summon={hasSummon:false,name:'None',desc:'',photo:''};if(sn){h.summon.hasSummon=true;h.summon.name=sn}else{h.summon.hasSummon=false;h.summon.name='None'}
+if(!h.awakenedAbility)h.awakenedAbility={name:'',desc:'',rarity:'LEGENDARY'};h.awakenedAbility.name=document.getElementById('editAbilityName').value.trim()||h.awakenedAbility.name;h.awakenedAbility.desc=document.getElementById('editAbilityDesc').value.trim()||h.awakenedAbility.desc;
+this.saveDB();if(this.currentAdventurer?.id===id)this.currentAdventurer=h;this.closeAdminEdit();this.renderAdmin();this.updateNavBadge();soundEngine.playSparkle();alert('Saved!')}
+renderAdmin(){document.getElementById('adminStatTotal').innerText=this.db.length;document.getElementById('adminStatElite').innerText=this.db.filter(h=>['S','SS','SSS','EX'].includes(h.rank)).length;document.getElementById('adminStatPortals').innerText=this.portals.length;
+document.getElementById('adminStatAvgIndex').innerText=(this.db.reduce((a,c)=>a+(c.powerIndex||70),0)/(this.db.length||1)).toFixed(1);
+document.getElementById('adminTableBody').innerHTML=this.db.map(h=>{const st=h.status||'ACTIVE';return`<tr class="border-b border-slate-800/40 hover:bg-slate-900/50">
+<td class="p-2 text-amber-400 text-xs">${h.id}</td><td class="p-2 font-bold text-white">${h.name}</td><td class="p-2 text-slate-300 text-xs">${h.region||''}</td>
+<td class="p-2 font-bold text-amber-300">${h.rank}</td><td class="p-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase status-badge-${st}">${st}</span></td>
+<td class="p-2"><div class="flex flex-wrap gap-1">
+<button onclick="app.openAdminEdit('${h.id}')" class="px-2 py-1 rounded bg-cyan-950 border border-cyan-500/40 text-cyan-300 text-[10px] font-bold">EDIT</button>
+<button onclick="app.setCardStatus('${h.id}','ACTIVE')" class="px-2 py-1 rounded bg-emerald-950 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">ON</button>
+<button onclick="app.setCardStatus('${h.id}','SUSPENDED')" class="px-2 py-1 rounded bg-amber-950 border border-amber-500/40 text-amber-400 text-[10px] font-bold">SUS</button>
+<button onclick="app.setCardStatus('${h.id}','BLOCKED')" class="px-2 py-1 rounded bg-rose-950 border border-rose-500/40 text-rose-400 text-[10px] font-bold">BLK</button>
+<button onclick="app.deleteAdventurer('${h.id}')" class="px-2 py-1 rounded bg-rose-900/40 text-rose-400 text-[10px]"><i class="fa-solid fa-trash"></i></button>
+</div></td></tr>`}).join('')}
+}
+const app=new AppController();
+window.addEventListener('DOMContentLoaded',()=>app.init());
+</script>
+</body>
+</html>
