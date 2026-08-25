@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventurer Association - Extended Guild System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        
+        /* Custom Rank Badge Styles */
+        .badge-EX { background: linear-gradient(135deg, #a855f7, #ec4899, #f59e0b); color: #fff; font-weight: 900; box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); border: 1px solid #f472b6; }
+        .badge-SSS { background: linear-gradient(135deg, #dc2626, #9333ea); color: #fff; font-weight: 800; box-shadow: 0 0 8px rgba(220, 38, 38, 0.5); }
+        .badge-SS { background: #ea580c; color: #fff; }
+        .badge-S { background: #d97706; color: #fff; }
+        .badge-A { background: #2563eb; color: #fff; }
+        .badge-B { background: #059669; color: #fff; }
+        .badge-C { background: #4b5563; color: #fff; }
+        .badge-D { background: #374151; color: #d1d5db; }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <!-- Header Section -->
+    <header class="max-w-7xl mx-auto mb-8 glass p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4 border-b border-amber-500/30">
+        <div>
+            <h1 class="text-3xl font-extrabold text-amber-400 flex items-center gap-3">
+                <i class="fa-solid fa-shield-halved text-amber-500"></i> Adventurer Association Portal
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">Global Guild Registry • 15+ Supreme Guilds • 300+ Registered Adventurers</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="resetToDefaultData()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold px-4 py-2.5 rounded-xl border border-slate-700 transition">
+                <i class="fa-solid fa-rotate-right"></i> Reset 15 Guilds Data
+            </button>
+            <button onclick="openGuildModal()" class="bg-amber-600 hover:bg-amber-500 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg shadow-amber-900/40 transition flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add New Guild
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto">
+        <!-- Search & Stats Bar -->
+        <div class="glass p-4 rounded-xl mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
+            <div class="relative w-full sm:w-96">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="renderGuilds()" placeholder="Search Guild, Leader or Adventurer..." class="w-full bg-slate-900/90 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-amber-500">
+            </div>
+            <div class="flex gap-6 text-slate-400 text-sm">
+                <div>Total Guilds: <span id="guildCount" class="font-bold text-amber-400">0</span></div>
+                <div>Total Adventurers: <span id="totalPlayerCount" class="font-bold text-amber-400">0</span></div>
+            </div>
+        </div>
+
+        <!-- Guild Grid -->
+        <div id="guildsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Guild Cards Will Render Here -->
+        </div>
+    </main>
+
+    <!-- GUILD MODAL (Create/Edit) -->
+    <div id="guildModal" class="modal fixed inset-0 bg-black/80 z-50 justify-center items-center p-4">
+        <div class="glass max-w-lg w-full rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('guildModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 id="guildModalTitle" class="text-2xl font-bold text-amber-400 mb-4">Add New Guild</h2>
+            
+            <form id="guildForm" onsubmit="handleGuildSubmit(event)" class="space-y-4">
+                <input type="hidden" id="guildId">
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Guild Name</label>
+                    <input type="text" id="guildName" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Owner / Founder</label>
+                        <input type="text" id="guildFounder" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Guild Leader</label>
+                        <input type="text" id="guildLeader" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Co-Leader</label>
+                        <input type="text" id="guildCoLeader" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Guild Rank / Tier</label>
+                        <select id="guildTier" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                            <option value="EX-Rank (Mythic Order)">EX-Rank (Mythic Order)</option>
+                            <option value="SSS-Rank (Supreme Empire)">SSS-Rank (Supreme Empire)</option>
+                            <option value="SS-Rank (Grand Dominion)">SS-Rank (Grand Dominion)</option>
+                            <option value="S-Rank (High Guild)">S-Rank (High Guild)</option>
+                            <option value="A-Rank (Standard Order)">A-Rank (Standard Order)</option>
+                            <option value="B-Rank (Novice Guild)">B-Rank (Novice Guild)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Base Location</label>
+                        <input type="text" id="guildLocation" placeholder="e.g. Royal Capital" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Specialization</label>
+                        <input type="text" id="guildSpec" placeholder="e.g. Dungeon Raids" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Treasury (Gold Coins)</label>
+                        <input type="number" id="guildTreasury" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Guild Logo / Emblem</label>
+                        <input type="file" id="guildLogo" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-300">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition mt-4">Save Guild Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PLAYER MODAL (Create/Edit) -->
+    <div id="playerModal" class="modal fixed inset-0 bg-black/80 z-50 justify-center items-center p-4">
+        <div class="glass max-w-lg w-full rounded-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeModal('playerModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h2 id="playerModalTitle" class="text-2xl font-bold text-amber-400 mb-4">Add Adventurer</h2>
+            
+            <form id="playerForm" onsubmit="handlePlayerSubmit(event)" class="space-y-4">
+                <input type="hidden" id="playerGuildId">
+                <input type="hidden" id="playerId">
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Adventurer Name</label>
+                    <input type="text" id="playerName" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Guild Role</label>
+                        <select id="playerRole" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                            <option value="Owner">Owner / Founder</option>
+                            <option value="Guild Leader">Guild Leader</option>
+                            <option value="Co-Leader">Co-Leader</option>
+                            <option value="Squad Captain">Squad Captain</option>
+                            <option value="Veteran">Veteran Adventurer</option>
+                            <option value="Member">Regular Member</option>
+                            <option value="Novice">Novice Trainee</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Adventurer Rank</label>
+                        <select id="playerRank" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                            <option value="EX-Rank">EX-Rank (God Tier)</option>
+                            <option value="SSS-Rank">SSS-Rank (Supreme)</option>
+                            <option value="SS-Rank">SS-Rank</option>
+                            <option value="S-Rank">S-Rank</option>
+                            <option value="A-Rank">A-Rank</option>
+                            <option value="B-Rank">B-Rank</option>
+                            <option value="C-Rank">C-Rank</option>
+                            <option value="D-Rank">D-Rank</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Class / Job</label>
+                        <input type="text" id="playerClass" placeholder="e.g. Swordsman, Mage" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Status</label>
+                        <select id="playerStatus" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                            <option value="Active">Active</option>
+                            <option value="On Quest">On Quest / Mission</option>
+                            <option value="Resting">Resting / Injuried</option>
+                            <option value="Retired">Retired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Quests Completed</label>
+                        <input type="number" id="playerQuests" value="0" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase mb-1">Avatar Photo</label>
+                        <input type="file" id="playerAvatar" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-xs text-slate-300">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-semibold py-3 rounded-xl transition mt-4">Save Adventurer Data</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- VIEW PLAYERS MODAL -->
+    <div id="viewPlayersModal" class="modal fixed inset-0 bg-black/80 z-50 justify-center items-center p-4">
+        <div class="glass max-w-5xl w-full rounded-2xl p-6 relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('viewPlayersModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <div class="flex justify-between items-center mb-4 pr-8">
+                <div>
+                    <h2 id="viewGuildTitle" class="text-2xl font-bold text-amber-400">Guild Roster</h2>
+                    <p id="viewGuildSub" class="text-xs text-slate-400">Total Personnel List</p>
+                </div>
+                <button id="addPlayerBtn" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+                    + Add Adventurer
+                </button>
+            </div>
+
+            <!-- Scrollable Player Cards Container -->
+            <div id="playersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto pr-2 max-h-[65vh]">
+                <!-- Dynamic Players List -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        const STORAGE_KEY = 'AA_GUILD_SYSTEM_DB_V2';
+        let appData = { guilds: [] };
+
+        // --- Image Compression to Avoid LocalStorage Quota Exceeded Error ---
+        function compressImage(file, callback) {
+            if (!file) return callback(null);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const max_size = 150;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > height) {
+                        if (width > max_size) { height *= max_size / width; width = max_size; }
+                    } else {
+                        if (height > max_size) { width *= max_size / height; height = max_size; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- Generator to Auto-Create 15 Guilds with 20 Members Each ---
+        function generateDefaultData() {
+            const guildTemplates = [
+                { name: "Celestial Dominion", spec: "God-Tier Cosmic Raids", loc: "Aetheria Spire", tier: "EX-Rank (Mythic Order)", gold: 9500000 },
+                { name: "Shadow Syndicate", spec: "Assassination & Stealth", loc: "Underrealm City", tier: "EX-Rank (Mythic Order)", gold: 8200000 },
+                { name: "Phoenix Order", spec: "Flame Magic & Defense", loc: "Volcano Peak", tier: "SSS-Rank (Supreme Empire)", gold: 5800000 },
+                { name: "Dragon Slayers", spec: "Ancient Wyrm Hunts", loc: "Wyrm Citadel", tier: "SSS-Rank (Supreme Empire)", gold: 4900000 },
+                { name: "Arcane High Council", spec: "Forbidden Magic Research", loc: "Eldoria Tower", tier: "SSS-Rank (Supreme Empire)", gold: 6200000 },
+                { name: "Crimson Vanguard", spec: "Frontline Conquest", loc: "Blood Keep", tier: "SS-Rank (Grand Dominion)", gold: 3400000 },
+                { name: "Valkyrie Brigade", spec: "Aerial Recon & Healing", loc: "Valhalla Ridge", tier: "SS-Rank (Grand Dominion)", gold: 3100000 },
+                { name: "Leviathan Raiders", spec: "Abyssal Sea Expeditions", loc: "Tidefall Port", tier: "SS-Rank (Grand Dominion)", gold: 2900000 },
+                { name: "Astral Knights", spec: "Dimensional Gate Guard", loc: "Starlight Hold", tier: "S-Rank (High Guild)", gold: 2100000 },
+                { name: "Eclipse Order", spec: "Curse Breaking & Dark Arts", loc: "Shadowfell Citadel", tier: "S-Rank (High Guild)", gold: 2400000 },
+                { name: "Iron Bastion", spec: "Heavy Armored Siege", loc: "Titan Wall", tier: "S-Rank (High Guild)", gold: 1850000 },
+                { name: "Mythic Covenant", spec: "Relic Hunting & Dungeons", loc: "Ruin Valley", tier: "A-Rank (Standard Order)", gold: 1450000 },
+                { name: "Sunfire Templars", spec: "Holy Exorcism", loc: "Solaris Sanctuary", tier: "A-Rank (Standard Order)", gold: 1300000 },
+                { name: "Nether Spire", spec: "Void Dungeon Exploration", loc: "Abyssal Chasm", tier: "A-Rank (Standard Order)", gold: 1200000 },
+                { name: "Frostfang Battalion", spec: "Glacial Beast Taming", loc: "Everfrost Peak", tier: "B-Rank (Novice Guild)", gold: 950000 }
+            ];
+
+            const firstNames = ["Kaelen", "Ignis", "Arthur", "Lyra", "Valerius", "Zephyr", "Seraphina", "Drakon", "Elysia", "Varian", "Cassian", "Thorne", "Freya", "Gideon", "Sylvia", "Rowan", "Aurelius", "Morrigan", "Lucius", "Nico"];
+            const lastNames = ["Vance", "Pendragon", "Blackwood", "Stormbringer", "Nightshade", "Ironheart", "Frost", "Silverwing", "Bloodraven", "Valerie", "Shadowfang", "Duskwalker", "Ember", "Lightbringer", "Voidwalker"];
+            const classes = ["Swordsman", "Paladin", "Archmage", "Necromancer", "Shadow Assassin", "Dragon Knight", "High Priest", "Ranger", "Berserker", "Summoner", "Alchemist", "Elementalist", "Spellblade", "Beast Master"];
+            const rankPool = ["EX-Rank", "SSS-Rank", "SS-Rank", "S-Rank", "A-Rank", "B-Rank", "C-Rank", "D-Rank"];
+
+            const generatedGuilds = guildTemplates.map((gt, gIdx) => {
+                const founder = `${firstNames[gIdx % firstNames.length]} ${lastNames[gIdx % lastNames.length]}`;
+                const leader = `${firstNames[(gIdx + 1) % firstNames.length]} ${lastNames[(gIdx + 2) % lastNames.length]}`;
+                const coLeader = `${firstNames[(gIdx + 3) % firstNames.length]} ${lastNames[(gIdx + 4) % lastNames.length]}`;
+                
+                const players = [];
+                for (let i = 1; i <= 20; i++) {
+                    let role = "Member";
+                    let rank = rankPool[Math.floor(Math.random() * 4) + 3]; // Default B to S
+                    
+                    if (i === 1) { role = "Guild Leader"; rank = gt.tier.includes("EX") ? "EX-Rank" : "SSS-Rank"; }
+                    else if (i === 2) { role = "Co-Leader"; rank = gt.tier.includes("EX") ? "SSS-Rank" : "SS-Rank"; }
+                    else if (i <= 5) { role = "Squad Captain"; rank = "SS-Rank"; }
+                    else if (i <= 10) { role = "Veteran"; rank = "S-Rank"; }
+                    else if (i >= 18) { role = "Novice"; rank = "D-Rank"; }
+
+                    players.push({
+                        id: `p_${gIdx}_${i}`,
+                        name: `${firstNames[(gIdx + i) % firstNames.length]} ${lastNames[(i * 3) % lastNames.length]}`,
+                        role: role,
+                        rank: rank,
+                        class: classes[(i + gIdx) % classes.length],
+                        status: i % 4 === 0 ? "On Quest" : (i % 7 === 0 ? "Resting" : "Active"),
+                        quests: Math.floor(Math.random() * 150) + 10,
+                        avatar: ''
+                    });
+                }
+
+                return {
+                    id: `g_${gIdx + 1}`,
+                    name: gt.name,
+                    founder: founder,
+                    leader: leader,
+                    coLeader: coLeader,
+                    tier: gt.tier,
+                    location: gt.loc,
+                    spec: gt.spec,
+                    treasury: gt.gold,
+                    logo: '',
+                    players: players
+                };
+            });
+
+            return { guilds: generatedGuilds };
+        }
+
+        // --- Data Persistence ---
+        function loadData() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    appData = JSON.parse(saved);
+                } else {
+                    appData = generateDefaultData();
+                    saveData();
+                }
+            } catch (e) {
+                console.error("Load error:", e);
+                appData = generateDefaultData();
+            }
+            renderGuilds();
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('LocalStorage limit exceeded! Try clearing old cached data.');
+                }
+            }
+        }
+
+        function resetToDefaultData() {
+            if (confirm("क्या आप 15 Defualt Guilds और 300 Members का फ्रेश डेटा रीसेट करना चाहते हैं?")) {
+                appData = generateDefaultData();
+                saveData();
+                renderGuilds();
+            }
+        }
+
+        // --- Render UI ---
+        function renderGuilds() {
+            const container = document.getElementById('guildsContainer');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            let totalPlayersCount = 0;
+
+            const filtered = appData.guilds.filter(g => {
+                totalPlayersCount += g.players.length;
+                return g.name.toLowerCase().includes(search) || 
+                       g.leader.toLowerCase().includes(search) ||
+                       g.players.some(p => p.name.toLowerCase().includes(search));
+            });
+
+            document.getElementById('guildCount').innerText = filtered.length;
+            document.getElementById('totalPlayerCount').innerText = totalPlayersCount;
+
+            filtered.forEach(guild => {
+                const defaultLogo = `https://ui-avatars.com/api/?name=${encodeURIComponent(guild.name)}&background=d97706&color=fff`;
+                const card = document.createElement('div');
+                card.className = "glass rounded-2xl p-5 relative flex flex-col justify-between hover:border-amber-500/50 transition duration-300";
+                
+                // Tier Badge Style
+                let tierBadgeClass = "bg-amber-500/20 text-amber-400 border-amber-500/30";
+                if(guild.tier.includes("EX")) tierBadgeClass = "badge-EX";
+                else if(guild.tier.includes("SSS")) tierBadgeClass = "badge-SSS";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center gap-3 mb-3">
+                            <img src="${guild.logo || defaultLogo}" class="w-14 h-14 rounded-xl object-cover border border-amber-500/40 shadow-md">
+                            <div>
+                                <h3 class="text-lg font-bold text-white leading-tight">${guild.name}</h3>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold inline-block mt-1 ${tierBadgeClass}">${guild.tier}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5 text-xs text-slate-300 mb-4 bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                            <div class="flex justify-between"><span class="text-slate-400">Owner:</span><span class="font-medium text-amber-200">${guild.founder}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Leader:</span><span class="font-medium text-amber-300">${guild.leader}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Co-Leader:</span><span class="font-medium text-slate-200">${guild.coLeader || 'None'}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Location:</span><span>${guild.location}</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">Treasury:</span><span class="text-amber-400 font-bold"><i class="fa-solid fa-coins"></i> ${guild.treasury.toLocaleString()} Gold</span></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs text-slate-400">Registered Roster: <strong class="text-white">${guild.players.length} Adventurers</strong></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="openViewPlayersModal('${guild.id}')" class="flex-1 bg-amber-600/30 hover:bg-amber-600 text-amber-300 hover:text-white text-xs font-semibold py-2 rounded-lg transition border border-amber-500/30">
+                                <i class="fa-solid fa-users"></i> View Roster (20)
+                            </button>
+                            <button onclick="editGuild('${guild.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteGuild('${guild.id}')" class="bg-red-900/40 hover:bg-red-800 text-red-300 px-3 py-2 rounded-lg text-xs transition border border-red-700/50"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- Guild CRUD ---
+        function openGuildModal(editMode = false) {
+            if (!editMode) {
+                document.getElementById('guildForm').reset();
+                document.getElementById('guildId').value = '';
+                document.getElementById('guildModalTitle').innerText = 'Add New Guild';
+            }
+            document.getElementById('guildModal').classList.add('active');
+        }
+
+        function handleGuildSubmit(e) {
+            e.preventDefault();
+            const id = document.getElementById('guildId').value || 'g_' + Date.now();
+            const logoFile = document.getElementById('guildLogo').files[0];
+
+            const saveGuildObj = (logoUrl) => {
+                const existingIdx = appData.guilds.findIndex(g => g.id === id);
+                const guildObj = {
+                    id: id,
+                    name: document.getElementById('guildName').value,
+                    founder: document.getElementById('guildFounder').value,
+                    leader: document.getElementById('guildLeader').value,
+                    coLeader: document.getElementById('guildCoLeader').value,
+                    tier: document.getElementById('guildTier').value,
+                    location: document.getElementById('guildLocation').value,
+                    spec: document.getElementById('guildSpec').value,
+                    treasury: parseInt(document.getElementById('guildTreasury').value) || 0,
+                    logo: logoUrl || (existingIdx >= 0 ? appData.guilds[existingIdx].logo : ''),
+                    players: existingIdx >= 0 ? appData.guilds[existingIdx].players : []
+                };
+
+                if (existingIdx >= 0) appData.guilds[existingIdx] = guildObj;
+                else appData.guilds.push(guildObj);
+
+                saveData();
+                renderGuilds();
+                closeModal('guildModal');
+            };
+
+            if (logoFile) compressImage(logoFile, saveGuildObj);
+            else saveGuildObj(null);
+        }
+
+        function editGuild(guildId) {
+            const guild = appData.guilds.find(g => g.id === guildId);
+            if (!guild) return;
+
+            document.getElementById('guildId').value = guild.id;
+            document.getElementById('guildName').value = guild.name;
+            document.getElementById('guildFounder').value = guild.founder;
+            document.getElementById('guildLeader').value = guild.leader;
+            document.getElementById('guildCoLeader').value = guild.coLeader;
+            document.getElementById('guildTier').value = guild.tier;
+            document.getElementById('guildLocation').value = guild.location;
+            document.getElementById('guildSpec').value = guild.spec;
+            document.getElementById('guildTreasury').value = guild.treasury;
+
+            document.getElementById('guildModalTitle').innerText = 'Edit Guild Details';
+            openGuildModal(true);
+        }
+
+        function deleteGuild(guildId) {
+            if (confirm('Are you sure you want to disband this Guild?')) {
+                appData.guilds = appData.guilds.filter(g => g.id !== guildId);
+                saveData();
+                renderGuilds();
+            }
+        }
+
+        // --- Adventurer Roster CRUD ---
+        function openViewPlayersModal(guildId) {
+            const guild = appData.guilds.find(g => g.id === guildId);
+            if (!guild) return;
+
+            document.getElementById('viewGuildTitle').innerText = `${guild.name}`;
+            document.getElementById('viewGuildSub').innerText = `Registered Adventurers Roster (${guild.players.length} Members)`;
+            document.getElementById('addPlayerBtn').onclick = () => openPlayerModal(guildId);
+            
+            renderPlayersList(guild);
+            document.getElementById('viewPlayersModal').classList.add('active');
+        }
+
+        function renderPlayersList(guild) {
+            const container = document.getElementById('playersList');
+            container.innerHTML = '';
+
+            if (guild.players.length === 0) {
+                container.innerHTML = `<p class="text-slate-400 text-sm col-span-3 text-center py-8">No Adventurers registered in this guild yet.</p>`;
+                return;
+            }
+
+            guild.players.forEach(player => {
+                const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=1e293b&color=fff`;
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/90 border border-slate-700/80 rounded-xl p-3 flex items-center justify-between";
+                
+                // Rank Badge CSS Key
+                const rankCode = player.rank.split('-')[0];
+                const badgeClass = `badge-${rankCode}` || 'badge-C';
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <img src="${player.avatar || defaultAvatar}" class="w-10 h-10 rounded-full object-cover border border-amber-500/40 flex-shrink-0">
+                        <div class="truncate">
+                            <div class="flex items-center gap-1.5">
+                                <h4 class="font-bold text-white text-xs truncate">${player.name}</h4>
+                                <span class="text-[9px] px-1.5 py-0.2 rounded font-extrabold ${badgeClass}">${player.rank}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 truncate">${player.role} • <span class="text-slate-300">${player.class}</span></p>
+                            <p class="text-[10px] text-slate-500">Quests: ${player.quests} | Status: <span class="text-emerald-400">${player.status}</span></p>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 flex-shrink-0">
+                        <button onclick="editPlayer('${guild.id}', '${player.id}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deletePlayer('${guild.id}', '${player.id}')" class="text-slate-400 hover:text-red-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openPlayerModal(guildId, editMode = false) {
+            document.getElementById('playerGuildId').value = guildId;
+            if (!editMode) {
+                document.getElementById('playerForm').reset();
+                document.getElementById('playerId').value = '';
+                document.getElementById('playerModalTitle').innerText = 'Add Adventurer';
+            }
+            document.getElementById('playerModal').classList.add('active');
+        }
+
+        function handlePlayerSubmit(e) {
+            e.preventDefault();
+            const guildId = document.getElementById('playerGuildId').value;
+            const playerId = document.getElementById('playerId').value || 'p_' + Date.now();
+            const avatarFile = document.getElementById('playerAvatar').files[0];
+
+            const guild = appData.guilds.find(g => g.id === guildId);
+            if (!guild) return;
+
+            const savePlayerObj = (avatarUrl) => {
+                const existingIdx = guild.players.findIndex(p => p.id === playerId);
+                const playerObj = {
+                    id: playerId,
+                    name: document.getElementById('playerName').value,
+                    role: document.getElementById('playerRole').value,
+                    rank: document.getElementById('playerRank').value,
+                    class: document.getElementById('playerClass').value,
+                    status: document.getElementById('playerStatus').value,
+                    quests: parseInt(document.getElementById('playerQuests').value) || 0,
+                    avatar: avatarUrl || (existingIdx >= 0 ? guild.players[existingIdx].avatar : '')
+                };
+
+                if (existingIdx >= 0) guild.players[existingIdx] = playerObj;
+                else guild.players.push(playerObj);
+
+                saveData();
+                renderGuilds();
+                renderPlayersList(guild);
+                closeModal('playerModal');
+            };
+
+            if (avatarFile) compressImage(avatarFile, savePlayerObj);
+            else savePlayerObj(null);
+        }
+
+        function editPlayer(guildId, playerId) {
+            const guild = appData.guilds.find(g => g.id === guildId);
+            if (!guild) return;
+            const player = guild.players.find(p => p.id === playerId);
+            if (!player) return;
+
+            document.getElementById('playerGuildId').value = guildId;
+            document.getElementById('playerId').value = player.id;
+            document.getElementById('playerName').value = player.name;
+            document.getElementById('playerRole').value = player.role;
+            document.getElementById('playerRank').value = player.rank;
+            document.getElementById('playerClass').value = player.class;
+            document.getElementById('playerStatus').value = player.status;
+            document.getElementById('playerQuests').value = player.quests;
+
+            document.getElementById('playerModalTitle').innerText = 'Edit Adventurer Details';
+            openPlayerModal(guildId, true);
+        }
+
+        function deletePlayer(guildId, playerId) {
+            const guild = appData.guilds.find(g => g.id === guildId);
+            if (!guild) return;
+
+            if (confirm('Remove this Adventurer from the Guild?')) {
+                guild.players = guild.players.filter(p => p.id !== playerId);
+                saveData();
+                renderGuilds();
+                renderPlayersList(guild);
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Initialize Application
+        window.onload = loadData;
+    </script>
+</body>
+</html>
