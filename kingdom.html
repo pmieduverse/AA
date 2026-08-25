@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADVENTURE ASSOCIATION — Kingdom Map</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{
+colors:{brand:{dark:'#05070A',card:'#0D111A',gold:'#F59E0B',cyan:'#06B6D4',violet:'#8B5CF6'}},
+fontFamily:{sans:['Rajdhani','sans-serif'],display:['Cinzel','serif'],mono:['JetBrains Mono','monospace']}
+}}};
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+*{box-sizing:border-box}
+body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x:hidden;min-height:100vh}
+.glass{background:rgba(13,17,26,.85);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
+.glass-gold{background:rgba(20,16,10,.9);backdrop-filter:blur(16px);border:1px solid rgba(245,158,11,.35)}
+.text-gold{background:linear-gradient(135deg,#FFF,#FBBF24,#D97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.map-wrap{position:relative;width:100%;max-width:920px;margin:0 auto;aspect-ratio:1;user-select:none}
+.map-svg{width:100%;height:100%;filter:drop-shadow(0 0 40px rgba(6,182,212,.15))}
+.kingdom-path{cursor:pointer;transition:all .25s ease;stroke-width:2.5;stroke-linejoin:round}
+.kingdom-path:hover,.kingdom-path.active{filter:brightness(1.25) drop-shadow(0 0 12px currentColor);stroke-width:3.5}
+.kingdom-label{pointer-events:none;font-family:Cinzel,serif;font-weight:800;fill:#f1f5f9;text-anchor:middle;dominant-baseline:middle;font-size:13px;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+.kingdom-num{pointer-events:none;font-family:JetBrains Mono,monospace;font-weight:700;fill:rgba(255,255,255,.55);text-anchor:middle;font-size:10px}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#05070a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
+.pulse-ring{animation:pulseRing 2.5s ease-out infinite}
+@keyframes pulseRing{0%{transform:scale(.85);opacity:.6}70%{transform:scale(1.4);opacity:0}100%{opacity:0}}
+.edit-input{width:100%;padding:.55rem .75rem;border-radius:.75rem;background:#0a0e14;border:1px solid #1e293b;color:#e2e8f0;font-family:JetBrains Mono,monospace;font-size:.8rem}
+.edit-input:focus{outline:none;border-color:#f59e0b}
+textarea.edit-input{min-height:72px;resize:vertical}
+</style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-black">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 glass border-b border-slate-800/80">
+<div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-200 p-0.5">
+<div class="w-full h-full bg-slate-950 rounded-[6px] flex items-center justify-center"><i class="fa-solid fa-map text-amber-400"></i></div>
+</div>
+<div>
+<span class="font-display font-black text-lg tracking-wider text-white block leading-none">KINGDOM MAP</span>
+<span class="text-[9px] tracking-[0.2em] text-amber-400 font-bold font-mono">ADVENTURE ASSOCIATION • 7 REALMS</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button onclick="mapApp.toggleEditMode()" id="editModeBtn" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-xs font-mono font-bold text-slate-300 hover:border-amber-400 hover:text-amber-300 transition">
+<i class="fa-solid fa-pen-to-square mr-1"></i> <span id="editModeLabel">EDIT MODE</span>
+</button>
+<button onclick="mapApp.resetMap()" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 text-xs font-mono text-slate-400 hover:text-rose-400 transition" title="Reset to defaults">
+<i class="fa-solid fa-arrows-rotate"></i>
+</button>
+</div>
+</div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+<!-- MAP -->
+<div class="lg:col-span-7 xl:col-span-8">
+<div class="glass rounded-2xl p-4 sm:p-6 border-slate-800">
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-mono text-cyan-400 font-bold tracking-widest uppercase"><i class="fa-solid fa-globe mr-1"></i> Interactive Cartography</span>
+<span id="mapHint" class="text-[10px] font-mono text-slate-500">Click a kingdom to inspect</span>
+</div>
+<div class="map-wrap" id="mapWrap">
+<svg class="map-svg" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+<!-- Ocean / void backdrop -->
+<defs>
+<radialGradient id="voidBg" cx="50%" cy="50%" r="60%">
+<stop offset="0%" stop-color="#0c1222"/>
+<stop offset="100%" stop-color="#05070a"/>
+</radialGradient>
+<filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="600" height="600" fill="url(#voidBg)" rx="12"/>
+<!-- decorative rings -->
+<circle cx="300" cy="300" r="270" fill="none" stroke="rgba(6,182,212,.08)" stroke-width="1" stroke-dasharray="4 8"/>
+<circle cx="300" cy="300" r="200" fill="none" stroke="rgba(245,158,11,.06)" stroke-width="1" stroke-dasharray="2 10"/>
+
+<!-- Kingdom paths (stylized continents around center) -->
+<!-- 1 Valoria - center-north -->
+<path id="k1" class="kingdom-path" data-id="1" fill="#1e3a5f" stroke="#38bdf8"
+  d="M300 80 L380 120 L400 200 L340 240 L260 240 L200 200 L220 120 Z"
+  onclick="mapApp.select(1)"/>
+<!-- 2 Solaria - northeast -->
+<path id="k2" class="kingdom-path" data-id="2" fill="#7c2d12" stroke="#fbbf24"
+  d="M400 120 L500 100 L540 180 L500 260 L400 240 L380 160 Z"
+  onclick="mapApp.select(2)"/>
+<!-- 3 Ignis - southeast -->
+<path id="k3" class="kingdom-path" data-id="3" fill="#7f1d1d" stroke="#f87171"
+  d="M420 280 L520 300 L540 400 L460 460 L380 420 L360 340 Z"
+  onclick="mapApp.select(3)"/>
+<!-- 4 Aquaria - south -->
+<path id="k4" class="kingdom-path" data-id="4" fill="#0e4d6e" stroke="#22d3ee"
+  d="M220 400 L320 380 L400 420 L380 500 L260 520 L180 460 Z"
+  onclick="mapApp.select(4)"/>
+<!-- 5 Terran - southwest -->
+<path id="k5" class="kingdom-path" data-id="5" fill="#3f3f2a" stroke="#a3e635"
+  d="M80 300 L160 280 L220 360 L200 440 L100 420 L60 360 Z"
+  onclick="mapApp.select(5)"/>
+<!-- 6 Zephyr - northwest / upper -->
+<path id="k6" class="kingdom-path" data-id="6" fill="#312e81" stroke="#a78bfa"
+  d="M100 100 L200 80 L240 160 L180 220 L100 200 L60 140 Z"
+  onclick="mapApp.select(6)"/>
+<!-- 7 Umbra - west / dark -->
+<path id="k7" class="kingdom-path" data-id="7" fill="#1a1025" stroke="#c084fc"
+  d="M140 240 L220 220 L260 300 L220 360 L140 340 L100 280 Z"
+  onclick="mapApp.select(7)"/>
+
+<!-- Labels -->
+<text class="kingdom-label" x="300" y="155" style="font-size:11px">VALORIA</text>
+<text class="kingdom-num" x="300" y="170">K1</text>
+<text class="kingdom-label" x="460" y="175" style="font-size:10px">SOLARIA</text>
+<text class="kingdom-num" x="460" y="190">K2</text>
+<text class="kingdom-label" x="450" y="365" style="font-size:10px">IGNIS</text>
+<text class="kingdom-num" x="450" y="380">K3</text>
+<text class="kingdom-label" x="300" y="455" style="font-size:10px">AQUARIA</text>
+<text class="kingdom-num" x="300" y="470">K4</text>
+<text class="kingdom-label" x="130" y="355" style="font-size:10px">TERRAN</text>
+<text class="kingdom-num" x="130" y="370">K5</text>
+<text class="kingdom-label" x="145" y="145" style="font-size:10px">ZEPHYR</text>
+<text class="kingdom-num" x="145" y="160">K6</text>
+<text class="kingdom-label" x="180" y="290" style="font-size:10px">UMBRA</text>
+<text class="kingdom-num" x="180" y="305">K7</text>
+
+<!-- Center seal -->
+<circle cx="300" cy="300" r="28" fill="#0a0e14" stroke="#f59e0b" stroke-width="2"/>
+<circle cx="300" cy="300" r="22" fill="none" stroke="rgba(245,158,11,.3)" stroke-width="1" class="pulse-ring" style="transform-origin:300px 300px"/>
+<text x="300" y="297" text-anchor="middle" fill="#fbbf24" font-family="Cinzel" font-size="9" font-weight="800">AA</text>
+<text x="300" y="308" text-anchor="middle" fill="#94a3b8" font-family="JetBrains Mono" font-size="6">HQ</text>
+</svg>
+</div>
+
+<!-- Legend -->
+<div class="mt-4 flex flex-wrap gap-3 justify-center" id="legend"></div>
+</div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="lg:col-span-5 xl:col-span-4 space-y-4">
+<div class="glass-gold rounded-2xl p-5 border-amber-500/30 min-h-[420px]" id="detailPanel">
+<div class="text-center py-16 text-slate-500 font-mono text-sm" id="emptyDetail">
+<i class="fa-solid fa-hand-pointer text-3xl text-slate-600 mb-3 block"></i>
+Select a kingdom on the map
+</div>
+<div id="detailContent" class="hidden space-y-4">
+<div class="flex items-start justify-between gap-3">
+<div>
+<span id="dNum" class="text-[10px] font-mono text-amber-400 tracking-widest uppercase font-bold"></span>
+<h2 id="dName" class="font-display font-black text-2xl text-white leading-tight"></h2>
+<p id="dSubtitle" class="text-sm font-mono text-cyan-300"></p>
+</div>
+<div id="dIcon" class="w-14 h-14 rounded-xl flex items-center justify-center text-2xl border flex-shrink-0"></div>
+</div>
+<div class="grid grid-cols-2 gap-2 text-xs font-mono">
+<div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+<span class="text-slate-500 uppercase block text-[9px]">Climate</span>
+<span id="dClimate" class="text-amber-300 font-bold"></span>
+</div>
+<div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+<span class="text-slate-500 uppercase block text-[9px]">Capital</span>
+<span id="dCapital" class="text-cyan-300 font-bold"></span>
+</div>
+<div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+<span class="text-slate-500 uppercase block text-[9px]">Element</span>
+<span id="dElement" class="text-emerald-300 font-bold"></span>
+</div>
+<div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+<span class="text-slate-500 uppercase block text-[9px]">Threat Level</span>
+<span id="dThreat" class="text-rose-300 font-bold"></span>
+</div>
+</div>
+<div>
+<span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Description</span>
+<p id="dDesc" class="text-sm text-slate-300 leading-relaxed mt-1"></p>
+</div>
+<div>
+<span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Notable Landmarks</span>
+<ul id="dLandmarks" class="mt-1 space-y-1 text-sm text-slate-300 list-disc list-inside"></ul>
+</div>
+<div>
+<span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider">Dominant Clans</span>
+<div id="dClans" class="flex flex-wrap gap-1.5 mt-1"></div>
+</div>
+<div class="pt-2 border-t border-slate-800 flex gap-2">
+<button onclick="mapApp.openEdit()" id="editBtn" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs tracking-wider transition">
+<i class="fa-solid fa-pen mr-1"></i> EDIT DETAILS
+</button>
+</div>
+</div>
+</div>
+
+<!-- Quick stats -->
+<div class="glass rounded-2xl p-4 border-slate-800">
+<div class="text-[10px] font-mono text-slate-500 uppercase mb-2 tracking-wider">Realm Registry</div>
+<div class="grid grid-cols-3 gap-2 text-center">
+<div><div class="text-xl font-black font-mono text-amber-400" id="statKingdoms">7</div><div class="text-[9px] font-mono text-slate-500">KINGDOMS</div></div>
+<div><div class="text-xl font-black font-mono text-cyan-400" id="statCapitals">7</div><div class="text-[9px] font-mono text-slate-500">CAPITALS</div></div>
+<div><div class="text-xl font-black font-mono text-emerald-400" id="statEdited">0</div><div class="text-[9px] font-mono text-slate-500">EDITED</div></div>
+</div>
+</div>
+</div>
+</main>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-lg w-full glass-gold rounded-2xl p-6 space-y-3 max-h-[90vh] overflow-y-auto border-amber-500/40">
+<div class="flex justify-between items-center">
+<h3 class="font-display font-bold text-xl text-white">Edit Kingdom</h3>
+<button onclick="mapApp.closeEdit()" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<input type="hidden" id="eId">
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Name</label>
+<input id="eName" class="edit-input" placeholder="Kingdom name">
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Subtitle / Title</label>
+<input id="eSubtitle" class="edit-input" placeholder="e.g. High Citadel">
+<div class="grid grid-cols-2 gap-2">
+<div><label class="block text-[10px] font-mono text-slate-400 uppercase">Capital</label><input id="eCapital" class="edit-input"></div>
+<div><label class="block text-[10px] font-mono text-slate-400 uppercase">Climate</label><input id="eClimate" class="edit-input"></div>
+<div><label class="block text-[10px] font-mono text-slate-400 uppercase">Element</label><input id="eElement" class="edit-input"></div>
+<div><label class="block text-[10px] font-mono text-slate-400 uppercase">Threat Level</label>
+<select id="eThreat" class="edit-input">
+<option>LOW</option><option>MODERATE</option><option>HIGH</option><option>EXTREME</option><option>APOCALYPTIC</option>
+</select></div>
+</div>
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Description</label>
+<textarea id="eDesc" class="edit-input" rows="3"></textarea>
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Landmarks (one per line)</label>
+<textarea id="eLandmarks" class="edit-input" rows="3" placeholder="Landmark 1&#10;Landmark 2"></textarea>
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Dominant Clans (comma separated)</label>
+<input id="eClans" class="edit-input" placeholder="Shadow Clan, Human">
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Icon (Font Awesome class)</label>
+<input id="eIcon" class="edit-input" placeholder="fa-crown">
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Map Color (hex fill)</label>
+<input id="eColor" class="edit-input" placeholder="#1e3a5f" type="text">
+<label class="block text-[10px] font-mono text-slate-400 uppercase">Border Color (hex)</label>
+<input id="eStroke" class="edit-input" placeholder="#38bdf8" type="text">
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="mapApp.closeEdit()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="mapApp.saveEdit()" class="px-6 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-sm">SAVE</button>
+</div>
+</div>
+</div>
+
+<script>
+const DEFAULT_KINGDOMS = {
+1:{id:1,name:'Valoria',subtitle:'High Citadel',capital:'Aurelia Keep',climate:'Temperate Highland',element:'Order / Steel',threat:'MODERATE',
+desc:'Seat of the Adventure Association Headquarters. Marble citadels rise above cloud-cut cliffs. Law, training academies, and the Central Rank Tribunal operate from here.',
+landmarks:['Association HQ Spire','Trial Colosseum','Archive of Heroes','Gate of Seven Banners'],
+clans:['Human','Celestial Clan'],icon:'fa-landmark',color:'#1e3a5f',stroke:'#38bdf8'},
+2:{id:2,name:'Solaria',subtitle:'Sunfire Realm',capital:'Helios Spire',climate:'Arid Solar Desert',element:'Fire / Light',threat:'HIGH',
+desc:'Endless dunes under a twin-sun sky. Solar forges craft light-aspected weapons. Pilgrims seek the Dawn Temples; raiders stalk the glass canyons.',
+landmarks:['Helios Spire','Glass Canyon','Dawn Temple','Solar Forge Belt'],
+clans:['Celestial Clan','Dragon Clan'],icon:'fa-sun',color:'#7c2d12',stroke:'#fbbf24'},
+3:{id:3,name:'Ignis',subtitle:'Volcanic Domain',capital:'Magmahold',climate:'Volcanic / Ash Wastes',element:'Fire / Magma',threat:'EXTREME',
+desc:'Living volcanoes and rivers of molten stone. Only the hardiest smiths and fire-clans endure. Relics pulled from the caldera are priceless — and cursed.',
+landmarks:['Great Caldera','Obsidian Bridge','Ashen Markets','Heart of Ignis'],
+clans:['Dragon Clan','Demon Clan'],icon:'fa-volcano',color:'#7f1d1d',stroke:'#f87171'},
+4:{id:4,name:'Aquaria',subtitle:'Tidal Abyss',capital:'Coral Throne',climate:'Oceanic / Storm Coast',element:'Water / Tide',threat:'HIGH',
+desc:'Archipelagos and deep trenches. Kraken cults, tidal mages, and pearl-diving guilds rule the waves. The Abyss Gates open only at low tide.',
+landmarks:['Coral Throne','Abyss Gates','Stormbreak Lighthouse','Sunken Library'],
+clans:['Spirit Clan','Human'],icon:'fa-water',color:'#0e4d6e',stroke:'#22d3ee'},
+5:{id:5,name:'Terran',subtitle:'Iron Mountains',capital:'Stonehold',climate:'Alpine / Mineral Rich',element:'Earth / Metal',threat:'MODERATE',
+desc:'Jagged peaks packed with mythril and iron. Dwarven-style fortresses and beastkin tribes share uneasy treaties. Avalanches and cave horrors are constant risks.',
+landmarks:['Stonehold Citadel','Mythril Veins','Echo Caverns','Iron Road'],
+clans:['Beast Clan','Human'],icon:'fa-mountain',color:'#3f3f2a',stroke:'#a3e635'},
+6:{id:6,name:'Zephyr',subtitle:'Celestial Sky',capital:'Cloudspire',climate:'Floating Isles / Aether',element:'Wind / Holy',threat:'LOW',
+desc:'Sky islands tethered by ancient aether anchors. Home of celestial bloodlines and wind-riders. Gravity is a suggestion; falling is a lifestyle.',
+landmarks:['Cloudspire Palace','Aether Anchors','Sky Arena','Starfall Observatory'],
+clans:['Celestial Clan','Spirit Clan'],icon:'fa-cloud',color:'#312e81',stroke:'#a78bfa'},
+7:{id:7,name:'Umbra',subtitle:'Shadow Void',capital:'Nullhaven',climate:'Perpetual Night',element:'Shadow / Void',threat:'APOCALYPTIC',
+desc:'A realm where light dies. Shadow clans, void rifts, and sealed horrors. Only the strongest — or the already-lost — walk these lands willingly.',
+landmarks:['Nullhaven','Void Rift Scar','Silent Cathedral','Obsidian Labyrinth'],
+clans:['Shadow Clan','Demon Clan','Ancient Clan'],icon:'fa-moon',color:'#1a1025',stroke:'#c084fc'}
+};
+
+const mapApp = {
+  data: {},
+  selected: null,
+  editMode: false,
+  editedCount: 0,
+
+  init() {
+    const saved = localStorage.getItem('AA_KINGDOM_MAP_V1');
+    if (saved) {
+      try { this.data = JSON.parse(saved); } catch(e) { this.data = JSON.parse(JSON.stringify(DEFAULT_KINGDOMS)); }
+    } else {
+      this.data = JSON.parse(JSON.stringify(DEFAULT_KINGDOMS));
+    }
+    this.applyColors();
+    this.renderLegend();
+    this.updateStats();
+  },
+
+  save() {
+    localStorage.setItem('AA_KINGDOM_MAP_V1', JSON.stringify(this.data));
+  },
+
+  applyColors() {
+    Object.values(this.data).forEach(k => {
+      const el = document.getElementById('k' + k.id);
+      if (el) {
+        el.setAttribute('fill', k.color || '#1e293b');
+        el.setAttribute('stroke', k.stroke || '#64748b');
+      }
+    });
+  },
+
+  renderLegend() {
+    document.getElementById('legend').innerHTML = Object.values(this.data).map(k => `
+      <button onclick="mapApp.select(${k.id})" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-950/60 hover:border-slate-600 text-[10px] font-mono transition">
+        <span class="legend-dot" style="background:${k.stroke || k.color}"></span>
+        <span class="text-slate-300">K${k.id} ${k.name}</span>
+      </button>
+    `).join('');
+  },
+
+  select(id) {
+    this.selected = id;
+    document.querySelectorAll('.kingdom-path').forEach(p => p.classList.remove('active'));
+    const path = document.getElementById('k' + id);
+    if (path) path.classList.add('active');
+    this.renderDetail(id);
+  },
+
+  renderDetail(id) {
+    const k = this.data[id];
+    if (!k) return;
+    document.getElementById('emptyDetail').classList.add('hidden');
+    document.getElementById('detailContent').classList.remove('hidden');
+    document.getElementById('dNum').innerText = `KINGDOM ${k.id}`;
+    document.getElementById('dName').innerText = k.name;
+    document.getElementById('dSubtitle').innerText = k.subtitle || '';
+    document.getElementById('dClimate').innerText = k.climate || '—';
+    document.getElementById('dCapital').innerText = k.capital || '—';
+    document.getElementById('dElement').innerText = k.element || '—';
+    document.getElementById('dThreat').innerText = k.threat || '—';
+    document.getElementById('dDesc').innerText = k.desc || '';
+    document.getElementById('dLandmarks').innerHTML = (k.landmarks || []).map(l => `<li>${this.esc(l)}</li>`).join('') || '<li class="text-slate-500">None listed</li>';
+    document.getElementById('dClans').innerHTML = (k.clans || []).map(c => `<span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[10px] font-mono text-cyan-300">${this.esc(c)}</span>`).join('') || '—';
+    const iconBox = document.getElementById('dIcon');
+    iconBox.style.borderColor = k.stroke || '#64748b';
+    iconBox.style.background = (k.color || '#1e293b') + 'cc';
+    iconBox.style.color = k.stroke || '#fbbf24';
+    iconBox.innerHTML = `<i class="fa-solid ${k.icon || 'fa-map'}"></i>`;
+  },
+
+  toggleEditMode() {
+    this.editMode = !this.editMode;
+    document.getElementById('editModeLabel').innerText = this.editMode ? 'EDIT ON' : 'EDIT MODE';
+    document.getElementById('editModeBtn').classList.toggle('border-amber-400', this.editMode);
+    document.getElementById('editModeBtn').classList.toggle('text-amber-300', this.editMode);
+    document.getElementById('mapHint').innerText = this.editMode ? 'Select kingdom → Edit Details' : 'Click a kingdom to inspect';
+  },
+
+  openEdit() {
+    if (!this.selected) return;
+    const k = this.data[this.selected];
+    document.getElementById('eId').value = k.id;
+    document.getElementById('eName').value = k.name || '';
+    document.getElementById('eSubtitle').value = k.subtitle || '';
+    document.getElementById('eCapital').value = k.capital || '';
+    document.getElementById('eClimate').value = k.climate || '';
+    document.getElementById('eElement').value = k.element || '';
+    document.getElementById('eThreat').value = k.threat || 'MODERATE';
+    document.getElementById('eDesc').value = k.desc || '';
+    document.getElementById('eLandmarks').value = (k.landmarks || []).join('\n');
+    document.getElementById('eClans').value = (k.clans || []).join(', ');
+    document.getElementById('eIcon').value = k.icon || 'fa-map';
+    document.getElementById('eColor').value = k.color || '';
+    document.getElementById('eStroke').value = k.stroke || '';
+    document.getElementById('editModal').classList.remove('hidden');
+  },
+
+  closeEdit() {
+    document.getElementById('editModal').classList.add('hidden');
+  },
+
+  saveEdit() {
+    const id = +document.getElementById('eId').value;
+    const k = this.data[id];
+    if (!k) return;
+    k.name = document.getElementById('eName').value.trim() || k.name;
+    k.subtitle = document.getElementById('eSubtitle').value.trim();
+    k.capital = document.getElementById('eCapital').value.trim();
+    k.climate = document.getElementById('eClimate').value.trim();
+    k.element = document.getElementById('eElement').value.trim();
+    k.threat = document.getElementById('eThreat').value;
+    k.desc = document.getElementById('eDesc').value.trim();
+    k.landmarks = document.getElementById('eLandmarks').value.split('\n').map(s => s.trim()).filter(Boolean);
+    k.clans = document.getElementById('eClans').value.split(',').map(s => s.trim()).filter(Boolean);
+    k.icon = document.getElementById('eIcon').value.trim() || 'fa-map';
+    const col = document.getElementById('eColor').value.trim();
+    const str = document.getElementById('eStroke').value.trim();
+    if (col) k.color = col;
+    if (str) k.stroke = str;
+    k._edited = true;
+    this.save();
+    this.applyColors();
+    this.renderLegend();
+    this.renderDetail(id);
+    this.updateStats();
+    this.closeEdit();
+  },
+
+  resetMap() {
+    if (!confirm('Reset all kingdoms to default lore & colors?')) return;
+    this.data = JSON.parse(JSON.stringify(DEFAULT_KINGDOMS));
+    this.save();
+    this.applyColors();
+    this.renderLegend();
+    this.updateStats();
+    if (this.selected) this.renderDetail(this.selected);
+    else {
+      document.getElementById('emptyDetail').classList.remove('hidden');
+      document.getElementById('detailContent').classList.add('hidden');
+    }
+  },
+
+  updateStats() {
+    document.getElementById('statKingdoms').innerText = Object.keys(this.data).length;
+    document.getElementById('statCapitals').innerText = Object.values(this.data).filter(k => k.capital).length;
+    document.getElementById('statEdited').innerText = Object.values(this.data).filter(k => k._edited).length;
+  },
+
+  esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => mapApp.init());
+</script>
+</body>
+</html>
