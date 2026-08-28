@@ -15,12 +15,37 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 .glass-panel{background:rgba(13,17,26,.8);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
 .glass-panel-gold{background:rgba(20,16,10,.85);backdrop-filter:blur(16px);border:1px solid rgba(245,158,11,.3)}
 .text-gold-gradient{background:linear-gradient(135deg,#FFF,#FBBF24,#D97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.perspective-1000{perspective:1000px}
-.card-inner{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.175,.885,.32,1.275);transform-style:preserve-3d}
+.perspective-1000{perspective:1400px}
+.card-stage{position:relative;width:100%;max-width:920px;margin:0 auto}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .9s cubic-bezier(.175,.885,.32,1.275);transform-style:preserve-3d}
 .card-inner.flipped{transform:rotateY(180deg)}
-.card-front,.card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:1rem}
+.card-front,.card-back{position:absolute;width:100%;height:100%;backface-visibility:hidden;border-radius:1.25rem;overflow:hidden}
 .card-back{transform:rotateY(180deg)}
 .holo-sheen{position:relative;overflow:hidden}
+.holo-sheen::before{content:'';position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.12) 45%,rgba(255,255,255,.25) 50%,rgba(255,255,255,.12) 55%,transparent 60%);animation:holoSweep 4s ease-in-out infinite;pointer-events:none;z-index:5}
+@keyframes holoSweep{0%{transform:translateX(-30%) rotate(25deg)}100%{transform:translateX(30%) rotate(25deg)}}
+@keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes rankPulse{0%,100%{box-shadow:0 0 30px rgba(245,158,11,.4)}50%{box-shadow:0 0 55px rgba(245,158,11,.75),0 0 90px rgba(245,158,11,.3)}}
+@keyframes rankPulseEX{0%,100%{box-shadow:0 0 40px rgba(255,215,0,.6),0 0 70px rgba(153,0,255,.35)}50%{box-shadow:0 0 70px rgba(255,215,0,.9),0 0 110px rgba(153,0,255,.55),0 0 140px rgba(236,72,153,.25)}}
+@keyframes rankPulseSSS{0%,100%{box-shadow:0 0 35px rgba(239,68,68,.55)}50%{box-shadow:0 0 60px rgba(239,68,68,.85),0 0 95px rgba(147,51,234,.4)}}
+@keyframes zoomIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes particleFloat{0%{transform:translateY(0) scale(1);opacity:.7}100%{transform:translateY(-120px) scale(0);opacity:0}}
+.card-float{animation:cardFloat 5s ease-in-out infinite}
+.card-rank-S{border-color:#f59e0b!important;animation:rankPulse 2.5s ease-in-out infinite}
+.card-rank-SS{border-color:#f97316!important;animation:rankPulse 2.2s ease-in-out infinite}
+.card-rank-SSS{border-color:#ef4444!important;animation:rankPulseSSS 2s ease-in-out infinite}
+.card-rank-EX{border-color:#fbbf24!important;animation:rankPulseEX 1.8s ease-in-out infinite}
+.card-rank-A{border-color:#a855f7!important;box-shadow:0 0 28px rgba(168,85,247,.45)}.card-rank-B{border-color:#3b82f6!important;box-shadow:0 0 22px rgba(59,130,246,.4)}
+.card-rank-C{border-color:#22c55e!important}.card-rank-D,.card-rank-E{border-color:#64748b!important}
+.card-avatar-click{cursor:zoom-in;transition:transform .3s,box-shadow .3s;position:relative}
+.card-avatar-click:hover{transform:scale(1.06);box-shadow:0 0 25px rgba(245,158,11,.55)}
+.card-avatar-click::after{content:'🔍';position:absolute;bottom:4px;right:4px;font-size:12px;opacity:0;transition:opacity .2s;background:rgba(0,0,0,.6);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.card-avatar-click:hover::after{opacity:1}
+.zoom-modal-bg{background:radial-gradient(ellipse at center,rgba(15,23,42,.95) 0%,rgba(0,0,0,.98) 100%)}
+.zoom-img-wrap{animation:zoomIn .35s ease-out;position:relative}
+.zoom-img-wrap img{max-width:min(96vw,1200px);max-height:88vh;object-fit:contain;border-radius:1rem;box-shadow:0 0 60px rgba(245,158,11,.25),0 25px 80px rgba(0,0,0,.6)}
+.card-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:1.25rem;z-index:4}
+.card-particles span{position:absolute;width:4px;height:4px;border-radius:50%;background:#fbbf24;animation:particleFloat 3s linear infinite}
 .status-badge-ACTIVE{background:rgba(16,185,129,.2);color:#34d399;border:1px solid #10b981}
 .status-badge-SUSPENDED{background:rgba(245,158,11,.2);color:#fbbf24;border:1px solid #f59e0b}
 .status-badge-BLOCKED{background:rgba(239,68,68,.2);color:#f87171;border:1px solid #ef4444}
@@ -28,12 +53,6 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 .dash-tab.active{background:rgba(245,158,11,.15);border-color:rgba(245,158,11,.5);color:#fbbf24}
 .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#05070a}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:3px}
-.card-rank-S{border-color:#f59e0b!important;box-shadow:0 0 30px rgba(245,158,11,.55)}
-.card-rank-SS{border-color:#f97316!important;box-shadow:0 0 35px rgba(249,115,22,.6)}
-.card-rank-SSS{border-color:#ef4444!important;box-shadow:0 0 40px rgba(239,68,68,.65)}
-.card-rank-EX{box-shadow:0 0 50px rgba(255,215,0,.7),0 0 80px rgba(153,0,255,.4)}
-.card-rank-A{border-color:#a855f7!important}.card-rank-B{border-color:#3b82f6!important}
-.card-rank-C{border-color:#22c55e!important}.card-rank-D,.card-rank-E{border-color:#64748b!important}
 .drop-zone{border:2px dashed rgba(245,158,11,.4);border-radius:1rem;background:rgba(15,23,42,.6);transition:all .25s;cursor:pointer;position:relative}
 .drop-zone:hover,.drop-zone.dragover{border-color:#f59e0b;background:rgba(245,158,11,.08);box-shadow:0 0 20px rgba(245,158,11,.15)}
 .drop-zone.has-image{border-style:solid;border-color:rgba(245,158,11,.6)}
@@ -263,53 +282,73 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <button onclick="app.claimCard()" class="w-full sm:w-auto px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black tracking-wider text-lg mx-auto block"><i class="fa-solid fa-id-card"></i> CLAIM CARD</button>
 </div></section>
 
-<!-- CARD -->
-<section id="viewCard" class="view-section hidden max-w-5xl mx-auto px-4 py-12">
-<div class="text-center space-y-2 mb-8"><span class="text-amber-400 font-mono text-xs font-bold tracking-widest uppercase">VERIFIED ID</span>
-<h2 class="font-display font-black text-3xl text-white">OFFICIAL ADVENTURER CARD</h2>
-<p class="text-slate-400 text-sm">Click card to flip</p></div>
-<div class="w-full max-w-md sm:max-w-xl mx-auto h-[520px] sm:h-[360px] perspective-1000 mb-8">
+<!-- CARD — LARGE DISPLAY -->
+<section id="viewCard" class="view-section hidden max-w-7xl mx-auto px-4 py-10">
+<div class="text-center space-y-2 mb-6">
+<span class="text-amber-400 font-mono text-xs font-bold tracking-widest uppercase">VERIFIED ID • FULL DISPLAY</span>
+<h2 class="font-display font-black text-3xl sm:text-4xl text-white">OFFICIAL ADVENTURER CARD</h2>
+<p class="text-slate-400 text-sm">Click card to flip · Click photo for Full HD zoom</p>
+</div>
+<div class="card-stage perspective-1000 mb-8 card-float">
+<div class="w-full max-w-[920px] mx-auto h-[560px] sm:h-[420px] relative">
 <div id="adventureCardInner" onclick="app.flipCard()" class="card-inner cursor-pointer shadow-2xl">
-<div id="cardFront" class="card-front glass-panel-gold border-2 border-amber-500/50 p-6 flex flex-col justify-between holo-sheen">
-<div class="flex justify-between items-center border-b border-amber-500/30 pb-2">
-<div class="flex items-center gap-2"><i class="fa-solid fa-shield-halved text-amber-400 text-xl"></i>
-<div><h4 class="font-display font-black text-sm text-white">ADVENTURE ASSOCIATION</h4>
-<span id="cardFrontRegion" class="text-[9px] font-mono text-amber-400 uppercase"></span></div></div>
-<span id="cardFrontStatusBadge" class="font-mono text-xs font-bold status-badge-ACTIVE px-2 py-1 rounded-full uppercase">ACTIVE</span>
+<!-- FRONT -->
+<div id="cardFront" class="card-front glass-panel-gold border-2 border-amber-500/50 p-6 sm:p-8 flex flex-col justify-between holo-sheen">
+<div id="cardParticles" class="card-particles"></div>
+<div class="flex justify-between items-center border-b border-amber-500/30 pb-3 relative z-10">
+<div class="flex items-center gap-3"><i class="fa-solid fa-shield-halved text-amber-400 text-2xl"></i>
+<div><h4 class="font-display font-black text-base sm:text-lg text-white tracking-wide">ADVENTURE ASSOCIATION</h4>
+<span id="cardFrontRegion" class="text-[10px] sm:text-xs font-mono text-amber-400 uppercase tracking-wider"></span></div></div>
+<span id="cardFrontStatusBadge" class="font-mono text-xs font-bold status-badge-ACTIVE px-3 py-1.5 rounded-full uppercase">ACTIVE</span>
 </div>
-<div class="flex gap-4 items-center py-2">
-<div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-amber-400/60 overflow-hidden flex-shrink-0"><img id="cardFrontAvatar" class="w-full h-full object-cover"></div>
-<div><div class="font-mono text-[10px] text-amber-400">ID: <span id="cardFrontID" class="text-white font-bold"></span></div>
-<h3 id="cardFrontName" class="font-display font-bold text-xl text-white"></h3>
-<div id="cardFrontCodename" class="text-xs font-mono text-amber-300"></div>
-<div class="flex gap-2 mt-1"><span id="cardFrontClan" class="text-[10px] font-mono bg-slate-900 border border-slate-700 px-2 py-0.5 rounded text-cyan-300"></span>
-<span id="cardFrontIndex" class="text-[10px] font-mono bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded text-amber-300"></span></div>
-</div></div>
-<div class="border-t border-amber-500/30 pt-2 flex justify-between items-center">
-<div><span class="text-[9px] font-mono text-slate-400 uppercase">ABILITY</span><span id="cardFrontAbility" class="font-bold text-sm text-amber-300 block"></span></div>
-<div id="cardFrontRankBadge" class="w-12 h-12 rounded-xl bg-amber-500 text-black font-display font-black text-2xl flex items-center justify-center">S</div>
-</div></div>
-<div id="cardBack" class="card-back glass-panel-gold border-2 border-cyan-500/50 p-6 flex flex-col justify-between">
-<div class="flex justify-between border-b border-cyan-500/30 pb-2"><span class="font-mono text-xs font-bold text-cyan-400 uppercase">DOSSIER</span>
-<span id="cardBackStatusBadge" class="text-[10px] font-mono status-badge-ACTIVE px-2 py-0.5 rounded uppercase">ACTIVE</span></div>
-<div class="grid grid-cols-5 gap-1" id="cardBackStats"></div>
-<div class="bg-slate-950/70 p-2 rounded-xl border border-slate-800"><div class="text-[9px] font-mono text-slate-400 uppercase">POWERS</div>
-<div id="cardBackPowers" class="text-xs font-mono text-cyan-300 font-bold flex flex-wrap gap-1"></div></div>
-<div class="grid grid-cols-2 gap-2 text-xs font-mono">
-<div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
-<div class="w-10 h-10 rounded-lg bg-slate-900 border border-amber-500/40 overflow-hidden flex items-center justify-center">
-<img id="cardBackEquipImg" class="w-full h-full object-cover hidden"><i id="cardBackEquipIcon" class="fa-solid fa-shield text-amber-400"></i></div>
-<div><span class="text-[8px] text-amber-400 uppercase font-bold">EQUIP</span><span id="cardBackEquipName" class="text-[11px] text-white font-bold block truncate"></span></div></div>
-<div class="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-2">
-<div class="w-10 h-10 rounded-lg bg-slate-900 border border-cyan-500/40 overflow-hidden flex items-center justify-center">
-<img id="cardBackSummonImg" class="w-full h-full object-cover hidden"><i id="cardBackSummonIcon" class="fa-solid fa-paw text-cyan-400"></i></div>
-<div><span class="text-[8px] text-cyan-400 uppercase font-bold">SUMMON</span><span id="cardBackSummonName" class="text-[11px] text-white font-bold block truncate"></span></div></div>
+<div class="flex gap-5 sm:gap-6 items-center py-4 relative z-10">
+<div class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-slate-900 border-2 border-amber-400/70 overflow-hidden flex-shrink-0 card-avatar-click" onclick="event.stopPropagation();app.zoomCardAvatar()">
+<img id="cardFrontAvatar" class="w-full h-full object-cover"></div>
+<div class="min-w-0 space-y-1">
+<div class="font-mono text-xs text-amber-400">ID: <span id="cardFrontID" class="text-white font-bold tracking-wide"></span></div>
+<h3 id="cardFrontName" class="font-display font-bold text-2xl sm:text-3xl text-white leading-tight"></h3>
+<div id="cardFrontCodename" class="text-sm font-mono text-amber-300"></div>
+<div class="flex flex-wrap gap-2 mt-2">
+<span id="cardFrontClan" class="text-xs font-mono bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg text-cyan-300"></span>
+<span id="cardFrontIndex" class="text-xs font-mono bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg text-amber-300"></span>
 </div>
-<div class="border-t border-cyan-500/30 pt-2 text-[9px] font-mono text-slate-400"><p>PROPERTY OF ADVENTURE ASSOCIATION</p><p class="text-cyan-400">DIGITAL SEAL: VERIFIED</p></div>
-</div></div></div>
+</div></div>
+<div class="border-t border-amber-500/30 pt-3 flex justify-between items-center relative z-10">
+<div><span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">ABILITY</span>
+<span id="cardFrontAbility" class="font-bold text-base sm:text-lg text-amber-300 block"></span></div>
+<div id="cardFrontRankBadge" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-black font-display font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg shadow-amber-500/40">S</div>
+</div></div>
+<!-- BACK -->
+<div id="cardBack" class="card-back glass-panel-gold border-2 border-cyan-500/50 p-6 sm:p-8 flex flex-col justify-between holo-sheen">
+<div class="flex justify-between border-b border-cyan-500/30 pb-3">
+<span class="font-mono text-sm font-bold text-cyan-400 uppercase tracking-wider">DOSSIER</span>
+<span id="cardBackStatusBadge" class="text-xs font-mono status-badge-ACTIVE px-2.5 py-1 rounded uppercase">ACTIVE</span>
+</div>
+<div class="grid grid-cols-5 gap-2" id="cardBackStats"></div>
+<div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+<div class="text-[10px] font-mono text-slate-400 uppercase mb-1">POWERS</div>
+<div id="cardBackPowers" class="text-sm font-mono text-cyan-300 font-bold flex flex-wrap gap-1.5"></div>
+</div>
+<div class="grid grid-cols-2 gap-3 text-sm font-mono">
+<div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-amber-500/40 transition" onclick="event.stopPropagation();app.zoomCardEquip()">
+<div class="w-14 h-14 rounded-xl bg-slate-900 border border-amber-500/40 overflow-hidden flex items-center justify-center flex-shrink-0">
+<img id="cardBackEquipImg" class="w-full h-full object-cover hidden"><i id="cardBackEquipIcon" class="fa-solid fa-shield text-amber-400 text-lg"></i></div>
+<div class="min-w-0"><span class="text-[9px] text-amber-400 uppercase font-bold">EQUIP</span>
+<span id="cardBackEquipName" class="text-sm text-white font-bold block truncate"></span></div></div>
+<div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 flex items-center gap-3 cursor-pointer hover:border-cyan-500/40 transition" onclick="event.stopPropagation();app.zoomCardSummon()">
+<div class="w-14 h-14 rounded-xl bg-slate-900 border border-cyan-500/40 overflow-hidden flex items-center justify-center flex-shrink-0">
+<img id="cardBackSummonImg" class="w-full h-full object-cover hidden"><i id="cardBackSummonIcon" class="fa-solid fa-paw text-cyan-400 text-lg"></i></div>
+<div class="min-w-0"><span class="text-[9px] text-cyan-400 uppercase font-bold">SUMMON</span>
+<span id="cardBackSummonName" class="text-sm text-white font-bold block truncate"></span></div></div>
+</div>
+<div class="border-t border-cyan-500/30 pt-3 text-[10px] font-mono text-slate-400 flex justify-between">
+<div><p>PROPERTY OF ADVENTURE ASSOCIATION</p><p class="text-cyan-400">DIGITAL SEAL: VERIFIED</p></div>
+<p class="text-slate-600">v7.0</p>
+</div></div></div></div></div>
 <div class="flex flex-wrap justify-center gap-3">
-<button onclick="app.flipCard()" class="px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-bold text-sm"><i class="fa-solid fa-rotate text-amber-400"></i> FLIP</button>
-<button onclick="app.navTo('dashboard')" class="px-6 py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-sm">DASHBOARD <i class="fa-solid fa-arrow-right"></i></button>
+<button onclick="app.flipCard()" class="px-6 py-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-200 font-bold text-sm hover:border-amber-500/50 transition"><i class="fa-solid fa-rotate text-amber-400"></i> FLIP CARD</button>
+<button onclick="app.zoomCardAvatar()" class="px-6 py-3 rounded-xl bg-slate-900 border border-amber-500/40 text-amber-300 font-bold text-sm hover:bg-amber-500/10 transition"><i class="fa-solid fa-expand"></i> FULL HD PHOTO</button>
+<button onclick="app.navTo('dashboard')" class="px-7 py-3 rounded-xl bg-amber-500 text-black font-extrabold text-sm shadow-lg shadow-amber-500/25">DASHBOARD <i class="fa-solid fa-arrow-right"></i></button>
 </div>
 </section>
 
@@ -480,11 +519,12 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 </main>
 
 <!-- ZOOM -->
-<div id="imgZoomModal" class="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 hidden" onclick="app.closeZoom()">
-<div class="relative max-w-3xl w-full" onclick="event.stopPropagation()">
-<button onclick="app.closeZoom()" class="absolute -top-10 right-0 text-white text-2xl hover:text-amber-400"><i class="fa-solid fa-xmark"></i></button>
-<img id="zoomImg" class="w-full max-h-[85vh] object-contain rounded-2xl border border-slate-700">
-<p id="zoomCaption" class="text-center text-slate-300 font-mono text-sm mt-3"></p>
+<div id="imgZoomModal" class="fixed inset-0 z-[60] zoom-modal-bg flex items-center justify-center p-4 hidden" onclick="app.closeZoom()">
+<div class="zoom-img-wrap relative flex flex-col items-center" onclick="event.stopPropagation()">
+<button onclick="app.closeZoom()" class="absolute -top-12 right-0 sm:right-[-2rem] text-white text-2xl hover:text-amber-400 transition"><i class="fa-solid fa-xmark"></i></button>
+<img id="zoomImg" class="border border-amber-500/30" alt="Full HD">
+<p id="zoomCaption" class="text-center text-slate-300 font-mono text-sm mt-4 tracking-wide"></p>
+<p class="text-center text-slate-600 font-mono text-[10px] mt-1">FULL HD VIEW · Click outside to close</p>
 </div></div>
 
 <!-- INV MODAL -->
@@ -937,16 +977,34 @@ document.getElementById('cardFrontClan').innerText=h.clan;document.getElementByI
 document.getElementById('cardFrontRegion').innerText=(h.region||'').toUpperCase();document.getElementById('cardFrontAbility').innerText=h.awakenedAbility?.name||'';
 document.getElementById('cardFrontRankBadge').innerText=h.rank;
 const st=h.status||'ACTIVE';
-document.getElementById('cardFrontStatusBadge').className=`font-mono text-xs font-bold status-badge-${st} px-2 py-1 rounded-full uppercase`;
+document.getElementById('cardFrontStatusBadge').className=`font-mono text-xs font-bold status-badge-${st} px-3 py-1.5 rounded-full uppercase`;
 document.getElementById('cardFrontStatusBadge').innerText=st;
-document.getElementById('cardBackStatusBadge').className=`text-[10px] font-mono status-badge-${st} px-2 py-0.5 rounded uppercase`;
+document.getElementById('cardBackStatusBadge').className=`text-xs font-mono status-badge-${st} px-2.5 py-1 rounded uppercase`;
 document.getElementById('cardBackStatusBadge').innerText=st;
-const attrs=h.attributes||{};document.getElementById('cardBackStats').innerHTML=Object.entries(attrs).map(([k,v])=>`<div class="bg-slate-950/80 p-1 rounded-lg border border-slate-800 text-center"><span class="text-[8px] text-slate-400 uppercase font-mono">${k.slice(0,3)}</span><span class="text-xs font-bold font-mono text-amber-400 block">${v}</span></div>`).join('');
-document.getElementById('cardBackPowers').innerHTML=(h.powers||[]).map(p=>`<span class="px-1.5 py-0.5 rounded bg-slate-900 border border-cyan-500/30 text-cyan-300">${p}</span>`).join('');
+const attrs=h.attributes||{};document.getElementById('cardBackStats').innerHTML=Object.entries(attrs).map(([k,v])=>`<div class="bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 text-center"><span class="text-[9px] text-slate-400 uppercase font-mono">${k.slice(0,3)}</span><span class="text-sm sm:text-base font-bold font-mono text-amber-400 block">${v}</span></div>`).join('');
+document.getElementById('cardBackPowers').innerHTML=(h.powers||[]).map(p=>`<span class="px-2 py-1 rounded-lg bg-slate-900 border border-cyan-500/30 text-cyan-300">${p}</span>`).join('');
 const eq=h.equipment||{};document.getElementById('cardBackEquipName').innerText=eq.name||'';const ei=document.getElementById('cardBackEquipImg'),eic=document.getElementById('cardBackEquipIcon');if(eq.photo){ei.src=eq.photo;ei.classList.remove('hidden');eic.classList.add('hidden')}else{ei.classList.add('hidden');eic.classList.remove('hidden')}
 const su=h.summon||{};document.getElementById('cardBackSummonName').innerText=su.hasSummon?su.name:'None';const si=document.getElementById('cardBackSummonImg'),sic=document.getElementById('cardBackSummonIcon');if(su.hasSummon&&su.photo){si.src=su.photo;si.classList.remove('hidden');sic.classList.add('hidden')}else{si.classList.add('hidden');sic.classList.remove('hidden')}
+this.spawnCardParticles(h.rank);
+}
+spawnCardParticles(rank){
+const box=document.getElementById('cardParticles');if(!box)return;box.innerHTML='';
+const n=['EX','SSS','SS','S'].includes(rank)?18:['A','B'].includes(rank)?10:6;
+const colors={EX:['#fbbf24','#a855f7','#ec4899'],SSS:['#ef4444','#a855f7'],SS:['#f97316','#fbbf24'],S:['#f59e0b','#fde68a'],A:['#a855f7'],B:['#3b82f6']};
+const cols=colors[rank]||['#64748b'];
+for(let i=0;i<n;i++){
+const s=document.createElement('span');
+s.style.left=Math.random()*100+'%';s.style.bottom=Math.random()*20+'%';
+s.style.background=cols[i%cols.length];s.style.animationDelay=(Math.random()*3)+'s';
+s.style.animationDuration=(2.5+Math.random()*2)+'s';
+s.style.width=s.style.height=(2+Math.random()*4)+'px';
+box.appendChild(s);
+}
 }
 flipCard(){soundEngine.playWhoosh();document.getElementById('adventureCardInner').classList.toggle('flipped')}
+zoomCardAvatar(){const h=this.currentAdventurer;if(!h||!h.avatar)return;this.zoomImage(h.avatar,`${h.name} — Full HD Portrait`)}
+zoomCardEquip(){const h=this.currentAdventurer;const p=h?.equipment?.photo;if(!p){soundEngine.playClick();return}this.zoomImage(p,`${h.equipment.name||'Equipment'} — Full HD`)}
+zoomCardSummon(){const h=this.currentAdventurer;const p=h?.summon?.photo;if(!p){soundEngine.playClick();return}this.zoomImage(p,`${h.summon.name||'Summon'} — Full HD`)}
 setDashTab(tab){soundEngine.playClick();this.dashTab=tab;document.querySelectorAll('.dash-tab').forEach(t=>{t.classList.remove('active');t.classList.add('text-slate-400','border-slate-800')});document.querySelectorAll('.dash-panel').forEach(p=>p.classList.add('hidden'));
 const tb=document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1));if(tb){tb.classList.add('active');tb.classList.remove('text-slate-400','border-slate-800')}
 const pn=document.getElementById('dashPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));if(pn)pn.classList.remove('hidden');
@@ -1010,7 +1068,7 @@ if(editId){const i=h.achievements.findIndex(x=>x.id===editId);if(i>=0)h.achievem
 this.syncHeroToDB();this.closeAchievementModal();this.renderAchievements();soundEngine.playSparkle()}
 deleteAchievement(id){if(!confirm('Delete achievement?'))return;this.currentAdventurer.achievements=(this.currentAdventurer.achievements||[]).filter(a=>a.id!==id);this.syncHeroToDB();this.renderAchievements()}
 syncHeroToDB(){const i=this.db.findIndex(h=>h.id===this.currentAdventurer.id);if(i>=0)this.db[i]=this.currentAdventurer;this.saveDB()}
-zoomImage(src,cap){if(!src)return;soundEngine.playClick();document.getElementById('zoomImg').src=src;document.getElementById('zoomCaption').innerText=cap||'';document.getElementById('imgZoomModal').classList.remove('hidden')}
+zoomImage(src,cap){if(!src)return;soundEngine.playSparkle();const img=document.getElementById('zoomImg');img.src=src;img.style.imageRendering='auto';document.getElementById('zoomCaption').innerText=cap||'Full HD View';document.getElementById('imgZoomModal').classList.remove('hidden')}
 closeZoom(){document.getElementById('imgZoomModal').classList.add('hidden')}
 esc(s){return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}
 renderPortals(cat){this.portalFilter=cat||'ALL';const cats=['ALL',...new Set(this.portals.map(p=>p.category||'Other'))];
