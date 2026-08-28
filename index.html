@@ -34,6 +34,13 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 .card-rank-EX{box-shadow:0 0 50px rgba(255,215,0,.7),0 0 80px rgba(153,0,255,.4)}
 .card-rank-A{border-color:#a855f7!important}.card-rank-B{border-color:#3b82f6!important}
 .card-rank-C{border-color:#22c55e!important}.card-rank-D,.card-rank-E{border-color:#64748b!important}
+.drop-zone{border:2px dashed rgba(245,158,11,.4);border-radius:1rem;background:rgba(15,23,42,.6);transition:all .25s;cursor:pointer;position:relative}
+.drop-zone:hover,.drop-zone.dragover{border-color:#f59e0b;background:rgba(245,158,11,.08);box-shadow:0 0 20px rgba(245,158,11,.15)}
+.drop-zone.has-image{border-style:solid;border-color:rgba(245,158,11,.6)}
+.drop-zone-cyan{border-color:rgba(6,182,212,.4)}
+.drop-zone-cyan:hover,.drop-zone-cyan.dragover{border-color:#06b6d4;background:rgba(6,182,212,.08);box-shadow:0 0 20px rgba(6,182,212,.15)}
+.drop-zone-cyan.has-image{border-color:rgba(6,182,212,.6)}
+.drop-hint{font-size:11px;color:#94a3b8;font-family:JetBrains Mono,monospace;margin-top:6px;text-align:center}
 </style>
 </head>
 <body class="min-h-screen flex flex-col relative selection:bg-cyan-500 selection:text-black">
@@ -128,12 +135,18 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <option>Kingdom 5 — Terran (Iron Mountains)</option><option>Kingdom 6 — Zephyr (Celestial Sky)</option>
 <option>Kingdom 7 — Umbra (Shadow Void)</option>
 </select></div></div>
-<div><label class="block text-xs font-mono text-slate-400 mb-2 uppercase">Profile Photo *</label>
-<div class="flex items-center gap-4">
-<div class="w-24 h-24 rounded-2xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center">
+<div><label class="block text-xs font-mono text-slate-400 mb-2 uppercase">Profile Photo * <span class="text-amber-400/70 normal-case">(Browse / Drag-Drop / Ctrl+V Paste)</span></label>
+<div id="avatarDropZone" class="drop-zone p-4 flex flex-col sm:flex-row items-center gap-4">
+<div class="w-28 h-28 rounded-2xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center flex-shrink-0">
 <img id="avatarPreview" class="w-full h-full object-cover hidden"><i id="avatarPlaceholder" class="fa-solid fa-user text-3xl text-slate-600"></i></div>
-<input type="file" id="avatarUpload" accept="image/*" class="text-sm text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:bg-amber-500 file:text-black">
-</div></div>
+<div class="flex-1 text-center sm:text-left space-y-2">
+<p class="text-sm text-slate-300 font-mono"><i class="fa-solid fa-cloud-arrow-up text-amber-400"></i> Drop image here, click to browse, or paste (Ctrl+V)</p>
+<input type="file" id="avatarUpload" accept="image/*" class="text-sm text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:font-bold file:bg-amber-500 file:text-black file:cursor-pointer">
+<button type="button" id="avatarClearBtn" onclick="app.clearImage('avatar')" class="hidden text-xs text-rose-400 hover:text-rose-300 font-mono underline">Remove photo</button>
+</div>
+</div>
+<p class="drop-hint">JPG / PNG / WebP • auto-compressed for storage</p>
+</div>
 <div class="flex justify-end"><button onclick="app.wizardNext(1)" class="px-8 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold">NEXT <i class="fa-solid fa-arrow-right"></i></button></div>
 </div>
 
@@ -146,9 +159,20 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 </div>
 
 <div id="regStep3" class="glass-panel p-8 rounded-2xl border-slate-800 space-y-6 hidden">
-<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-sliders text-amber-400"></i> 5 Attributes</h3>
-<div class="space-y-4 max-w-xl mx-auto" id="attrSliders"></div>
-<div class="flex justify-between"><button onclick="app.wizardBack(3)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
+<h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-dna text-amber-400"></i> Core Attributes — System Calculated</h3>
+<p class="text-xs font-mono text-slate-400 -mt-2">Self-select disabled to prevent bias. Values derived from <span class="text-amber-300">Name + Clan + Seed</span>. Reroll allowed.</p>
+<div class="bg-slate-950/80 p-4 rounded-xl border border-amber-500/20 mb-2">
+<div class="flex flex-wrap gap-3 text-xs font-mono">
+<div><span class="text-slate-500">NAME SEED:</span> <span id="attrNameSeed" class="text-amber-300 font-bold">—</span></div>
+<div><span class="text-slate-500">CLAN:</span> <span id="attrClanSeed" class="text-cyan-300 font-bold">—</span></div>
+<div><span class="text-slate-500">POWER INDEX:</span> <span id="attrPowerIndexPreview" class="text-amber-400 font-black">—</span></div>
+</div>
+</div>
+<div class="space-y-3 max-w-xl mx-auto" id="attrSliders"></div>
+<div class="flex flex-wrap justify-center gap-3 pt-2">
+<button type="button" onclick="app.generateAttributes(true)" class="px-5 py-2.5 rounded-xl border border-cyan-500/40 bg-cyan-950/40 text-cyan-300 font-bold text-sm font-mono hover:border-cyan-400 transition"><i class="fa-solid fa-dice"></i> REROLL ATTRIBUTES</button>
+</div>
+<div class="flex justify-between pt-2"><button onclick="app.wizardBack(3)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
 <button onclick="app.wizardNext(3)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
 </div>
 
@@ -175,10 +199,14 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <h3 class="text-lg font-bold text-slate-200 border-b border-slate-800 pb-3"><i class="fa-solid fa-shield-halved text-amber-400"></i> Primary Equipment</h3>
 <input id="regEquipName" type="text" value="Sunfire Greatsword" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 font-mono text-sm font-bold focus:border-amber-400 focus:outline-none">
 <textarea id="regEquipDesc" rows="2" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs focus:border-amber-400 focus:outline-none">Forged from solar plasma ore.</textarea>
-<div class="flex items-center gap-4">
-<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center">
+<div id="equipDropZone" class="drop-zone p-3 flex flex-col sm:flex-row items-center gap-3">
+<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-amber-400/50 overflow-hidden flex items-center justify-center flex-shrink-0">
 <img id="equipPreview" class="w-full h-full object-cover hidden"><i id="equipPlaceholder" class="fa-solid fa-shield text-2xl text-slate-600"></i></div>
-<input type="file" id="equipUpload" accept="image/*" class="text-sm text-slate-400 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+<div class="flex-1 text-center sm:text-left space-y-1">
+<p class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-cloud-arrow-up text-amber-400"></i> Drop / Browse / Paste</p>
+<input type="file" id="equipUpload" accept="image/*" class="text-sm text-slate-400 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-amber-500 file:text-black file:font-bold file:cursor-pointer">
+<button type="button" id="equipClearBtn" onclick="app.clearImage('equip')" class="hidden text-xs text-rose-400 hover:text-rose-300 font-mono underline">Remove</button>
+</div>
 </div>
 <div class="flex justify-between"><button onclick="app.wizardBack(5)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
 <button onclick="app.wizardNext(5)" class="px-8 py-3 rounded-xl bg-amber-500 text-black font-extrabold">NEXT</button></div>
@@ -190,10 +218,14 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <div id="summonFieldsContainer" class="hidden space-y-3">
 <input id="regSummonName" type="text" value="Shadow Fenrir" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-cyan-300 font-mono text-sm font-bold">
 <textarea id="regSummonDesc" rows="2" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-xs">Primordial shadow wolf.</textarea>
-<div class="flex items-center gap-4">
-<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-cyan-400/50 overflow-hidden flex items-center justify-center">
+<div id="summonDropZone" class="drop-zone drop-zone-cyan p-3 flex flex-col sm:flex-row items-center gap-3">
+<div class="w-20 h-20 rounded-xl bg-slate-900 border-2 border-cyan-400/50 overflow-hidden flex items-center justify-center flex-shrink-0">
 <img id="summonPreview" class="w-full h-full object-cover hidden"><i id="summonPlaceholder" class="fa-solid fa-dog text-2xl text-slate-600"></i></div>
-<input type="file" id="summonUpload" accept="image/*" class="text-sm text-slate-400 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-cyan-500 file:text-black file:font-bold">
+<div class="flex-1 text-center sm:text-left space-y-1">
+<p class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i> Drop / Browse / Paste</p>
+<input type="file" id="summonUpload" accept="image/*" class="text-sm text-slate-400 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-cyan-500 file:text-black file:font-bold file:cursor-pointer">
+<button type="button" id="summonClearBtn" onclick="app.clearImage('summon')" class="hidden text-xs text-rose-400 hover:text-rose-300 font-mono underline">Remove</button>
+</div>
 </div></div>
 <div class="flex justify-between"><button onclick="app.wizardBack(6)" class="px-6 py-3 rounded-xl border border-slate-700 text-slate-300 font-bold">BACK</button>
 <button id="btnCommenceAssessment" onclick="app.commenceAssessment()" disabled class="px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-extrabold cursor-not-allowed"><i class="fa-solid fa-microchip"></i> COMMENCE ASSESSMENT</button></div>
@@ -590,7 +622,7 @@ constructor(){
 this.currentView='landing';this.registrationStep=1;this.selectedAvatar='';this.selectedClan='Shadow Clan';
 this.selectedPowers=[];this.customPowers=[];this.equipPhoto='';this.summonPhoto='';this.currentAdventurer=null;
 this.db=[];this.portals=[];this.dashTab='overview';this.invFilter='ALL';this.portalFilter='ALL';
-this.tempInvPhoto='';this.tempAchPhoto='';
+this.tempInvPhoto='';this.tempAchPhoto='';this.generatedAttributes=null;this.attrRerollSalt=0;
 }
 init(){
 const local=localStorage.getItem('AA_ADVENTURERS_DB_V7');
@@ -610,35 +642,118 @@ saveDB(){try{localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(this.db)
 savePortals(){try{localStorage.setItem('AA_PORTALS_V7',JSON.stringify(this.portals))}catch(e){}}
 generateID(){return`AA-2026-${Math.random().toString(16).slice(2,6).toUpperCase()}-${Math.random().toString(36).slice(2,4).toUpperCase()}`}
 compressImage(file,cb){if(!file||!file.type.startsWith('image/'))return;const r=new FileReader();r.onload=ev=>{const img=new Image();img.onload=()=>{const M=280;let w=img.width,h=img.height;if(w>h){if(w>M){h=Math.round(h*M/w);w=M}}else{if(h>M){w=Math.round(w*M/h);h=M}}const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);cb(c.toDataURL('image/jpeg',.65));soundEngine.playSelect()};img.onerror=()=>{cb(ev.target.result);soundEngine.playSelect()};img.src=ev.target.result};r.readAsDataURL(file)}
+applyImage(type,dataUrl){
+if(type==='avatar'){this.selectedAvatar=dataUrl;document.getElementById('avatarPreview').src=dataUrl;document.getElementById('avatarPreview').classList.remove('hidden');document.getElementById('avatarPlaceholder').classList.add('hidden');document.getElementById('avatarDropZone').classList.add('has-image');document.getElementById('avatarClearBtn').classList.remove('hidden')}
+else if(type==='equip'){this.equipPhoto=dataUrl;document.getElementById('equipPreview').src=dataUrl;document.getElementById('equipPreview').classList.remove('hidden');document.getElementById('equipPlaceholder').classList.add('hidden');document.getElementById('equipDropZone').classList.add('has-image');document.getElementById('equipClearBtn').classList.remove('hidden')}
+else if(type==='summon'){this.summonPhoto=dataUrl;document.getElementById('summonPreview').src=dataUrl;document.getElementById('summonPreview').classList.remove('hidden');document.getElementById('summonPlaceholder').classList.add('hidden');document.getElementById('summonDropZone').classList.add('has-image');document.getElementById('summonClearBtn').classList.remove('hidden')}
+}
+clearImage(type){
+if(type==='avatar'){this.selectedAvatar='';document.getElementById('avatarPreview').src='';document.getElementById('avatarPreview').classList.add('hidden');document.getElementById('avatarPlaceholder').classList.remove('hidden');document.getElementById('avatarDropZone').classList.remove('has-image');document.getElementById('avatarClearBtn').classList.add('hidden');document.getElementById('avatarUpload').value=''}
+else if(type==='equip'){this.equipPhoto='';document.getElementById('equipPreview').src='';document.getElementById('equipPreview').classList.add('hidden');document.getElementById('equipPlaceholder').classList.remove('hidden');document.getElementById('equipDropZone').classList.remove('has-image');document.getElementById('equipClearBtn').classList.add('hidden');document.getElementById('equipUpload').value=''}
+else if(type==='summon'){this.summonPhoto='';document.getElementById('summonPreview').src='';document.getElementById('summonPreview').classList.add('hidden');document.getElementById('summonPlaceholder').classList.remove('hidden');document.getElementById('summonDropZone').classList.remove('has-image');document.getElementById('summonClearBtn').classList.add('hidden');document.getElementById('summonUpload').value=''}
+}
+setupDropZone(zoneId,inputId,type){
+const zone=document.getElementById(zoneId);const input=document.getElementById(inputId);if(!zone||!input)return;
+['dragenter','dragover','dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation()}));
+zone.addEventListener('dragover',()=>zone.classList.add('dragover'));
+zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));
+zone.addEventListener('drop',e=>{zone.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)this.compressImage(f,d=>this.applyImage(type,d))});
+zone.addEventListener('click',e=>{if(e.target===input||e.target.closest('button')||e.target.tagName==='INPUT')return;input.click()});
+input.addEventListener('change',e=>{const f=e.target.files[0];if(f)this.compressImage(f,d=>this.applyImage(type,d))});
+}
 bindUploads(){
-document.getElementById('avatarUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.selectedAvatar=d;document.getElementById('avatarPreview').src=d;document.getElementById('avatarPreview').classList.remove('hidden');document.getElementById('avatarPlaceholder').classList.add('hidden')})});
-document.getElementById('equipUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.equipPhoto=d;document.getElementById('equipPreview').src=d;document.getElementById('equipPreview').classList.remove('hidden');document.getElementById('equipPlaceholder').classList.add('hidden')})});
-document.getElementById('summonUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.summonPhoto=d;document.getElementById('summonPreview').src=d;document.getElementById('summonPreview').classList.remove('hidden');document.getElementById('summonPlaceholder').classList.add('hidden')})});
+this.setupDropZone('avatarDropZone','avatarUpload','avatar');
+this.setupDropZone('equipDropZone','equipUpload','equip');
+this.setupDropZone('summonDropZone','summonUpload','summon');
 document.getElementById('invPhotoUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempInvPhoto=d;document.getElementById('invPhotoPreview').src=d;document.getElementById('invPhotoPreview').classList.remove('hidden');document.getElementById('invPhotoIcon').classList.add('hidden')})});
 document.getElementById('achPhotoUpload').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempAchPhoto=d;document.getElementById('achPhotoPreview').src=d;document.getElementById('achPhotoPreview').classList.remove('hidden');document.getElementById('achPhotoIcon').classList.add('hidden')})});
+// Global paste support (Ctrl+V) — applies to currently visible registration step
+document.addEventListener('paste',e=>{
+const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+let file=null;for(const it of items){if(it.type.startsWith('image/')){file=it.getAsFile();break}}
+if(!file)return;
+const step=this.registrationStep;
+if(this.currentView==='register'){
+if(step===1)this.compressImage(file,d=>this.applyImage('avatar',d));
+else if(step===5)this.compressImage(file,d=>this.applyImage('equip',d));
+else if(step===6)this.compressImage(file,d=>this.applyImage('summon',d));
+}
+});
 }
 navTo(v){soundEngine.playClick();document.querySelectorAll('.view-section').forEach(s=>s.classList.add('hidden'));const t=document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1));if(t)t.classList.remove('hidden');this.currentView=v;scrollTo({top:0,behavior:'smooth'});if(v==='dashboard')this.renderDashboard();if(v==='card')this.renderCard();if(v==='admin')this.renderAdmin();if(v==='portals')this.renderPortals(this.portalFilter)}
 toggleSound(){soundEngine.muted=!soundEngine.muted;document.getElementById('soundIcon').className=soundEngine.muted?'fa-solid fa-volume-xmark text-rose-400':'fa-solid fa-volume-high text-amber-400'}
 toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
-startRegistration(){this.registrationStep=1;this.selectedPowers=[];this.customPowers=[];this.selectedAvatar='';this.equipPhoto='';this.summonPhoto='';['avatarPreview','equipPreview','summonPreview'].forEach(id=>document.getElementById(id).classList.add('hidden'));['avatarPlaceholder','equipPlaceholder','summonPlaceholder'].forEach(id=>document.getElementById(id).classList.remove('hidden'));['avatarUpload','equipUpload','summonUpload'].forEach(id=>document.getElementById(id).value='');this.updateWizardStepUI();document.getElementById('wizardGeneratedID').innerText=this.generateID();this.navTo('register')}
+startRegistration(){this.registrationStep=1;this.selectedPowers=[];this.customPowers=[];this.selectedAvatar='';this.equipPhoto='';this.summonPhoto='';this.generatedAttributes=null;this.attrRerollSalt=0;['avatarPreview','equipPreview','summonPreview'].forEach(id=>document.getElementById(id).classList.add('hidden'));['avatarPlaceholder','equipPlaceholder','summonPlaceholder'].forEach(id=>document.getElementById(id).classList.remove('hidden'));['avatarUpload','equipUpload','summonUpload'].forEach(id=>document.getElementById(id).value='');['avatarDropZone','equipDropZone','summonDropZone'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('has-image','dragover')});['avatarClearBtn','equipClearBtn','summonClearBtn'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('hidden')});this.updateWizardStepUI();document.getElementById('wizardGeneratedID').innerText=this.generateID();this.navTo('register')}
 renderClanGrid(){document.getElementById('clanSelectionGrid').innerHTML=CLANS.map(c=>`<div onclick="app.selectClan('${c.id}')" class="p-3 rounded-xl glass-panel cursor-pointer border-2 ${this.selectedClan===c.id?'border-amber-400 bg-amber-500/10':'border-slate-800 hover:border-slate-700'}"><div class="flex justify-between mb-1"><span class="font-bold text-white text-sm"><i class="fa-solid ${c.icon} text-amber-400"></i> ${c.name}</span>${this.selectedClan===c.id?'<i class="fa-solid fa-circle-check text-amber-400"></i>':''}</div><p class="text-xs text-slate-400">${c.desc}</p><span class="text-[10px] font-mono text-cyan-300">${c.buff}</span></div>`).join('')}
 selectClan(id){soundEngine.playSelect();this.selectedClan=id;this.renderClanGrid();document.getElementById('customClanContainer').classList.toggle('hidden',id!=='Custom')}
-renderAttrSliders(){const attrs=[['Strength','attrStrength','valStrength',75,'fa-hand-fist'],['Speed','attrSpeed','valSpeed',80,'fa-bolt'],['Endurance','attrEndurance','valEndurance',70,'fa-shield-heart'],['Intelligence','attrIntelligence','valIntelligence',85,'fa-brain'],['Energy','attrEnergy','valEnergy',88,'fa-wand-magic-sparkles']];
-document.getElementById('attrSliders').innerHTML=attrs.map(([n,id,vid,v,ic])=>`<div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800"><div class="flex justify-between text-sm font-mono mb-1"><span class="text-slate-200 font-bold"><i class="fa-solid ${ic} text-amber-400"></i> ${n}</span><span id="${vid}" class="text-amber-400 font-black">${v}</span></div><input type="range" id="${id}" min="20" max="100" value="${v}" oninput="document.getElementById('${vid}').innerText=this.value" class="w-full accent-amber-500"></div>`).join('')}
+// Deterministic hash from string (for fair name+clan based stats)
+hashSeed(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+// Clan affinity multipliers (fair system bias by lineage, not player choice of numbers)
+clanAffinity(){return{
+'Human':{Strength:1.02,Speed:1.02,Endurance:1.02,Intelligence:1.05,Energy:1.02},
+'Dragon Clan':{Strength:1.12,Speed:0.98,Endurance:1.08,Intelligence:1.0,Energy:1.1},
+'Shadow Clan':{Strength:0.98,Speed:1.12,Endurance:0.96,Intelligence:1.04,Energy:1.08},
+'Spirit Clan':{Strength:0.94,Speed:1.0,Endurance:0.98,Intelligence:1.1,Energy:1.14},
+'Celestial Clan':{Strength:1.0,Speed:1.06,Endurance:1.02,Intelligence:1.08,Energy:1.12},
+'Demon Clan':{Strength:1.1,Speed:1.04,Endurance:1.06,Intelligence:0.96,Energy:1.1},
+'Beast Clan':{Strength:1.08,Speed:1.1,Endurance:1.06,Intelligence:0.94,Energy:0.98},
+'Ancient Clan':{Strength:0.98,Speed:0.96,Endurance:1.04,Intelligence:1.14,Energy:1.1},
+'Custom':{Strength:1.03,Speed:1.03,Endurance:1.03,Intelligence:1.03,Energy:1.03}
+}}
+generateAttributes(reroll){
+if(reroll){this.attrRerollSalt=(this.attrRerollSalt||0)+1;soundEngine.playSparkle()}
+const fullName=(document.getElementById('regFullName')?.value||'').trim()||'Unknown';
+const codename=(document.getElementById('regCodename')?.value||'').trim()||'';
+let clan=this.selectedClan||'Human';
+if(clan==='Custom')clan=(document.getElementById('customClanInput')?.value||'').trim()||'Custom Lineage';
+const seedStr=`${fullName}|${codename}|${clan}|R${this.attrRerollSalt||0}`;
+const base=this.hashSeed(seedStr);
+const affinity=this.clanAffinity()[this.selectedClan]||this.clanAffinity()['Custom'];
+const names=['Strength','Speed','Endurance','Intelligence','Energy'];
+const icons={Strength:'fa-hand-fist',Speed:'fa-bolt',Endurance:'fa-shield-heart',Intelligence:'fa-brain',Energy:'fa-wand-magic-sparkles'};
+const attrs={};
+names.forEach((n,i)=>{
+// Base 48–78 from hash, then clan affinity, slight variance — fair range, no max-out
+const raw=((base>>(i*5))&0xFF)/255;
+let v=Math.round(48+raw*30);
+v=Math.round(v*(affinity[n]||1));
+v=Math.min(98,Math.max(35,v));
+attrs[n]=v;
+});
+this.generatedAttributes=attrs;
+const pIndex=Math.round(Object.values(attrs).reduce((a,b)=>a+b,0)/5);
+const el=document.getElementById('attrNameSeed');if(el)el.innerText=fullName+(codename?` “${codename}”`:'');
+const cl=document.getElementById('attrClanSeed');if(cl)cl.innerText=clan;
+const pi=document.getElementById('attrPowerIndexPreview');if(pi)pi.innerText=`${pIndex} / 100`;
+this.renderAttrDisplay(attrs);
+return attrs;
+}
+renderAttrDisplay(attrs){
+const icons={Strength:'fa-hand-fist',Speed:'fa-bolt',Endurance:'fa-shield-heart',Intelligence:'fa-brain',Energy:'fa-wand-magic-sparkles'};
+const order=['Strength','Speed','Endurance','Intelligence','Energy'];
+document.getElementById('attrSliders').innerHTML=order.map(n=>{
+const v=attrs[n]||50;
+const pct=Math.round((v/100)*100);
+return`<div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800">
+<div class="flex justify-between text-sm font-mono mb-1.5"><span class="text-slate-200 font-bold"><i class="fa-solid ${icons[n]} text-amber-400"></i> ${n}</span><span class="text-amber-400 font-black text-lg">${v}</span></div>
+<div class="w-full h-2 rounded-full bg-slate-900 overflow-hidden"><div class="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-500" style="width:${pct}%"></div></div>
+</div>`}).join('');
+}
+renderAttrSliders(){this.generateAttributes(false)}
 renderPowersGrid(){const all=[...POWERS,...this.customPowers];document.getElementById('powersGrid').innerHTML=all.map(p=>{const sel=this.selectedPowers.includes(p.id);return`<div onclick="app.togglePower('${p.id}')" class="p-2 rounded-xl glass-panel cursor-pointer border-2 text-center ${sel?'border-amber-400 bg-amber-500/10':'border-slate-800'}"><i class="fa-solid ${p.icon||'fa-star'} text-amber-400 text-lg"></i><div class="font-bold text-xs text-slate-200">${p.name}</div><div class="text-[9px] font-mono text-amber-300">${p.powerType||p.affinity||''}</div></div>`}).join('')}
 addCustomPower(){if(this.customPowers.length>=3){alert('Max 3 custom');return}const name=document.getElementById('customPowerName').value.trim();if(!name){alert('Name required');return}const id='CUSTOM_'+name.replace(/\s+/g,'_').toUpperCase()+'_'+Date.now().toString(36).slice(-4);this.customPowers.push({id,name,icon:'fa-wand-magic-sparkles',affinity:document.getElementById('customPowerCategory').value.trim()||'Custom',powerType:document.getElementById('customPowerType').value,desc:document.getElementById('customPowerDesc').value.trim()||'Custom'});document.getElementById('customPowerName').value='';document.getElementById('customPowerDesc').value='';document.getElementById('customPowerCountBadge').innerText=`Custom: ${this.customPowers.length}/3`;this.renderPowersGrid();soundEngine.playSparkle()}
 togglePower(id){soundEngine.playSelect();const i=this.selectedPowers.indexOf(id);if(i>-1)this.selectedPowers.splice(i,1);else if(this.selectedPowers.length<3)this.selectedPowers.push(id);document.getElementById('powerSlotsCounter').innerText=`${this.selectedPowers.length} / 3`;this.renderPowersGrid();const btn=document.getElementById('btnCommenceAssessment');if(this.selectedPowers.length===3){btn.disabled=false;btn.className='px-8 py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold cursor-pointer'}else{btn.disabled=true;btn.className='px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-extrabold cursor-not-allowed'}}
 toggleSummonFields(){document.getElementById('summonFieldsContainer').classList.toggle('hidden',!document.getElementById('regHasSummon').checked)}
-wizardNext(s){soundEngine.playClick();if(s===1){if(!document.getElementById('regFullName').value.trim()||!document.getElementById('regCodename').value.trim()){alert('Name & Codename required');return}if(!this.selectedAvatar){alert('Upload profile photo');return}}if(s===5&&!document.getElementById('regEquipName').value.trim()){alert('Equip name required');return}this.registrationStep=s+1;this.updateWizardStepUI()}
-wizardBack(s){soundEngine.playClick();this.registrationStep=s-1;this.updateWizardStepUI()}
-updateWizardStepUI(){const titles=['STEP 1: IDENTITY','STEP 2: CLAN','STEP 3: ATTRIBUTES','STEP 4: POWERS','STEP 5: EQUIPMENT','STEP 6: SUMMON'];document.getElementById('wizardStepTitle').innerText=titles[this.registrationStep-1];for(let i=1;i<=6;i++){const d=document.getElementById('regStep'+i),b=document.getElementById('pStep'+i);if(i===this.registrationStep){d.classList.remove('hidden');b.className='h-2 rounded-full bg-amber-500'}else{d.classList.add('hidden');b.className=i<this.registrationStep?'h-2 rounded-full bg-emerald-500':'h-2 rounded-full bg-slate-800'}}scrollTo({top:80,behavior:'smooth'})}
+wizardNext(s){soundEngine.playClick();if(s===1){if(!document.getElementById('regFullName').value.trim()||!document.getElementById('regCodename').value.trim()){alert('Name & Codename required');return}if(!this.selectedAvatar){alert('Upload profile photo');return}}if(s===5&&!document.getElementById('regEquipName').value.trim()){alert('Equip name required');return}this.registrationStep=s+1;this.updateWizardStepUI();if(this.registrationStep===3)this.generateAttributes(false)}
+wizardBack(s){soundEngine.playClick();this.registrationStep=s-1;this.updateWizardStepUI();if(this.registrationStep===3)this.generateAttributes(false)}
+updateWizardStepUI(){const titles=['STEP 1: IDENTITY','STEP 2: CLAN','STEP 3: ATTRIBUTES (SYSTEM)','STEP 4: POWERS','STEP 5: EQUIPMENT','STEP 6: SUMMON'];document.getElementById('wizardStepTitle').innerText=titles[this.registrationStep-1];for(let i=1;i<=6;i++){const d=document.getElementById('regStep'+i),b=document.getElementById('pStep'+i);if(i===this.registrationStep){d.classList.remove('hidden');b.className='h-2 rounded-full bg-amber-500'}else{d.classList.add('hidden');b.className=i<this.registrationStep?'h-2 rounded-full bg-emerald-500':'h-2 rounded-full bg-slate-800'}}scrollTo({top:80,behavior:'smooth'})}
 commenceAssessment(){if(this.selectedPowers.length!==3){alert('Select 3 powers');return}soundEngine.playReveal();const m=document.getElementById('assessmentModal'),bar=document.getElementById('assessmentProgressBar'),txt=document.getElementById('assessmentStatusText');m.classList.remove('hidden');let p=0;const iv=setInterval(()=>{p+=25;bar.style.width=p+'%';if(p===50)txt.innerText='Evaluating attributes...';if(p===75)txt.innerText='Building spell matrix...';if(p>=100){clearInterval(iv);setTimeout(()=>{m.classList.add('hidden');this.finalizeAssessment()},500)}},250)}
 finalizeAssessment(){
 const fullName=document.getElementById('regFullName').value.trim(),codename=document.getElementById('regCodename').value.trim();
 const dob=document.getElementById('regDOB').value,gender=document.getElementById('regGender').value;
 const nationality=document.getElementById('regNationality').value.trim(),region=document.getElementById('regRegion').value;
 let clan=this.selectedClan;if(clan==='Custom')clan=document.getElementById('customClanInput').value.trim()||'Custom Lineage';
-const attrs={Strength:+document.getElementById('attrStrength').value,Speed:+document.getElementById('attrSpeed').value,Endurance:+document.getElementById('attrEndurance').value,Intelligence:+document.getElementById('attrIntelligence').value,Energy:+document.getElementById('attrEnergy').value};
+const attrs=this.generatedAttributes||this.generateAttributes(false);
 let pIndex=Math.round(Object.values(attrs).reduce((a,b)=>a+b,0)/5);pIndex=Math.min(100,Math.max(10,pIndex));
 let rank='E';if(pIndex>=98)rank='EX';else if(pIndex>=93)rank='SSS';else if(pIndex>=88)rank='SS';else if(pIndex>=80)rank='S';else if(pIndex>=70)rank='A';else if(pIndex>=60)rank='B';else if(pIndex>=50)rank='C';else if(pIndex>=35)rank='D';
 const equipName=document.getElementById('regEquipName').value.trim()||'Iron Sword',equipDesc=document.getElementById('regEquipDesc').value.trim()||'Basic gear';
