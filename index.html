@@ -707,7 +707,22 @@ const DEFAULT_PORTALS=[
 {id:'p5',title:'News Board',desc:'HQ announcements.',url:'https://pmieduverse.github.io/AA/news',icon:'fa-newspaper'},
 {id:'p6',title:'Gear Database',desc:'Weapons & relics catalog.',url:'https://example.com/gear',category:'Tools',icon:'fa-shield-halved'}
 ];
-const SEED_HEROES=[{
+function generateSeedHeroes(){
+const first=['Aurelia','Kaelen','Lyra','Draven','Seraphina','Thorne','Elysia','Varian','Morrigan','Cassian','Freya','Gideon','Nyx','Rowan','Isolde','Orion','Selene','Darius','Vesper','Lucian','Astrid','Riven','Cora','Zeph','Mira','Kael','Sable','Rune','Iris','Jax','Nova','Blade','Echo','Frost','Hex','Quinn','Wren','Ash','Vera','Kade','Luna','Rex','Skye','Titan','Uma','Vale','Wisp','Xander','Yara','Zane'];
+const last=['Sunforge','Vance','Nightshade','Ironheart','Stormbringer','Blackwood','Frost','Ember','Voidwalker','Silverwing','Bloodraven','Duskwalker','Lightbringer','Shadowfang','Pendragon','Ashborne','Starveil','Thornwood','Ravenshadow','Goldcrest'];
+const codes=['Radiant Empress','Shadow Vanguard','Stormcaller','Void Reaper','Dawnblade','Nightwhisper','Iron Sentinel','Frostwitch','Emberwitch','Starstrider','Bloodhowl','Duskrunner','Sunwarden','Moonlit Fang','Thunderfist','Leafwarden','Icebound','Windrunner','Stonebreaker','Flameheart','Abyss Walker','Sky Piercer','Crystal Mage','Beastcaller','Soulbinder'];
+const regions=['Flame Kingdom — Blazehaven','Stone Kingdom — Granitehold','Wind Kingdom — Skyreach','Moon Kingdom — Lunaris','Thunder Territory — Stormhold','Leaf Land — Greenwood','Ice Kingdom — Frostholm'];
+const nats=['Flameborn','Stonekin','Skyfolk','Moonborn','Thunderborn','Leafkin','Frostborn'];
+const clans=['Human','Dragon Clan','Shadow Clan','Spirit Clan','Celestial Clan','Demon Clan','Beast Clan','Ancient Clan'];
+const powerPool=['Fire','Water','Wind','Earth','Lightning','Ice','Light','Shadow','Void','Gravity','Time','Blood','Dragon','Demon','Summon'];
+const equipNames=['Sunfire Greatsword','Abyssal Daggers','Storm Glaive','Frost Axe','Moonblade','Thunder Spear','Leaf Bow','Stone Hammer','Void Scythe','Aegis Solar Blade','Crystal Staff','Beast Claws'];
+const summonNames=['Shadow Fenrir','Starlight Pegasus','Flame Drake','Ice Wolf','Thunder Hawk','Leaf Sprite','Stone Golem','Void Serpent','Storm Roc'];
+const genders=['Male','Female','Non-Binary'];
+const statuses=['ACTIVE','ACTIVE','ACTIVE','ACTIVE','SUSPENDED','ACTIVE'];
+const ranksByIndex=p=>p>=98?'EX':p>=93?'SSS':p>=88?'SS':p>=80?'S':p>=70?'A':p>=60?'B':p>=50?'C':p>=35?'D':'E';
+const heroes=[];
+// 2 signature heroes first
+heroes.push({
 id:'AA-2026-EX99-AP',name:'Aurelia Sunforge',codename:'The Radiant Empress',dob:'1998-11-03',gender:'Female',nationality:'Moonborn',
 region:'Moon Kingdom — Lunaris',avatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
 clan:'Celestial Clan',attributes:{Strength:92,Speed:96,Endurance:90,Intelligence:98,Energy:99},powers:['Light','Time','Dragon'],
@@ -716,16 +731,42 @@ summon:{hasSummon:true,name:'Starlight Pegasus',desc:'Sacred steed.',photo:''},
 awakenedAbility:{name:'SOLAR CHRONO CATASTROPHE',desc:'Holy + Temporal absolute matrix.',rarity:'MYTHIC'},
 inventory:[{id:'inv1',name:'Solar Elixir',type:'Potion',desc:'Full restore.',qty:3,rarity:'Epic',photo:''},{id:'inv2',name:'Aegis Solar Blade',type:'Weapon',desc:'Primary divine weapon.',qty:1,rarity:'Mythic',photo:''}],
 achievements:[{id:'ach1',title:'Radiant Empress Ascension',desc:'Reached EX Rank.',date:'2025-06-12',rarity:'Mythic',photo:''},{id:'ach2',title:'Void Rift Sealed',desc:'Closed class-EX tear alone.',date:'2024-11-03',rarity:'Legendary',photo:''}]
-},{
+});
+heroes.push({
 id:'AA-2026-7X92-KP',name:'Kaelen Vance',codename:'Shadow Vanguard',dob:'2001-08-19',gender:'Male',nationality:'Flameborn',
 region:'Flame Kingdom — Blazehaven',avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
 clan:'Shadow Clan',attributes:{Strength:82,Speed:91,Endurance:74,Intelligence:84,Energy:95},powers:['Shadow','Blood','Demon'],
 powerIndex:88,rank:'SS',status:'ACTIVE',equipment:{name:'Abyssal Daggers',desc:'Twin shadow blades.',photo:''},
 summon:{hasSummon:true,name:'Shadow Fenrir',desc:'Void wolf.',photo:''},
 awakenedAbility:{name:'ABYSSAL BLOOD ART',desc:'Umbral drain empower speed.',rarity:'EPIC'},
-inventory:[{id:'inv3',name:'Shadowstep Boots',type:'Armor',desc:'Blink in darkness.',qty:1,rarity:'Rare',photo:''},{id:'inv4',name:'Lesser Healing Potion',type:'Potion',desc:'Moderate HP restore.',qty:12,rarity:'Common',photo:''},{id:'inv5',name:'Abyssal Daggers',type:'Weapon',desc:'Twin blades.',qty:1,rarity:'Legendary',photo:''}],
-achievements:[{id:'ach3',title:'First Blood Contract',desc:'Bound Shadow Fenrir.',date:'2023-02-14',rarity:'Epic',photo:''},{id:'ach4',title:'Night of a Thousand Blades',desc:'Cleared Flame crypt solo.',date:'2024-08-19',rarity:'Rare',photo:''}]
-}];
+inventory:[{id:'inv3',name:'Shadowstep Boots',type:'Armor',desc:'Blink in darkness.',qty:1,rarity:'Rare',photo:''},{id:'inv4',name:'Lesser Healing Potion',type:'Potion',desc:'Moderate HP restore.',qty:12,rarity:'Common',photo:''}],
+achievements:[{id:'ach3',title:'First Blood Contract',desc:'Bound Shadow Fenrir.',date:'2023-02-14',rarity:'Epic',photo:''}]
+});
+// 48 more random
+for(let i=0;i<48;i++){
+const ri=i%regions.length;
+const attrs={Strength:35+Math.floor(Math.random()*60),Speed:35+Math.floor(Math.random()*60),Endurance:35+Math.floor(Math.random()*60),Intelligence:35+Math.floor(Math.random()*60),Energy:35+Math.floor(Math.random()*60)};
+const pIndex=Math.min(99,Math.max(20,Math.round(Object.values(attrs).reduce((a,b)=>a+b,0)/5)));
+const rank=ranksByIndex(pIndex);
+const shuffled=[...powerPool].sort(()=>Math.random()-0.5).slice(0,3);
+const hasSummon=Math.random()>0.4;
+const id=`AA-2026-${Math.random().toString(16).slice(2,6).toUpperCase()}-${Math.random().toString(36).slice(2,4).toUpperCase()}`;
+const nm=`${first[i%first.length]} ${last[(i*3)%last.length]}`;
+heroes.push({
+id,name:nm,codename:codes[i%codes.length],dob:`${1995+Math.floor(Math.random()*12)}-${String(1+Math.floor(Math.random()*12)).padStart(2,'0')}-${String(1+Math.floor(Math.random()*28)).padStart(2,'0')}`,
+gender:genders[i%3],nationality:nats[ri],region:regions[ri],
+avatar:`https://ui-avatars.com/api/?name=${encodeURIComponent(nm)}&background=${['0f172a','1e293b','334155','7c2d12','14532d','1e3a5f','4a044e'][ri]}&color=fbbf24&size=128`,
+clan:clans[i%clans.length],attributes:attrs,powers:shuffled,powerIndex:pIndex,rank,status:statuses[i%statuses.length],
+equipment:{name:equipNames[i%equipNames.length],desc:'Standard issued gear.',photo:''},
+summon:{hasSummon,name:hasSummon?summonNames[i%summonNames.length]:'None',desc:hasSummon?'Contracted familiar.':'No contract',photo:''},
+awakenedAbility:{name:`${shuffled[0].toUpperCase()} MATRIX`,desc:`Synergy across ${regions[ri]}.`,rarity:rank==='EX'?'MYTHIC':(rank==='SSS'||rank==='SS'?'LEGENDARY':'EPIC')},
+inventory:[{id:'inv_'+id,name:equipNames[i%equipNames.length],type:'Weapon',desc:'Primary weapon.',qty:1,rarity:'Rare',photo:''}],
+achievements:[{id:'ach_'+id,title:'Official Registration',desc:'Joined the Adventure Association.',date:'2025-01-15',rarity:'Common',photo:''}]
+});
+}
+return heroes;
+}
+const SEED_HEROES=generateSeedHeroes();
 
 class AppController{
 constructor(){
@@ -1004,7 +1045,7 @@ else{res.innerHTML=`<div class="p-4 rounded-xl bg-rose-950/40 border border-rose
 loadCardByID(id){const f=this.db.find(h=>h.id===id);if(f){this.currentAdventurer=f;this.updateNavBadge();this.navTo('card')}}
 setCardStatus(id,st){soundEngine.playClick();const h=this.db.find(x=>x.id===id);if(h){h.status=st;this.saveDB();this.renderAdmin();if(this.currentAdventurer?.id===id)this.currentAdventurer.status=st;alert(`Status → ${st}`)}}
 deleteAdventurer(id){if(!confirm('Delete '+id+'?'))return;this.db=this.db.filter(h=>h.id!==id);this.saveDB();this.renderAdmin()}
-resetSeedDatabase(){if(!confirm('Reset to seed heroes?'))return;this.db=JSON.parse(JSON.stringify(SEED_HEROES));this.saveDB();this.renderAdmin()}
+resetSeedDatabase(){if(!confirm('Reset to 50 seed adventurers (fresh random IDs)?'))return;const fresh=generateSeedHeroes();this.db=JSON.parse(JSON.stringify(fresh));this.saveDB();document.getElementById('statTotal').innerText=this.db.length;this.renderAdmin();soundEngine.playSparkle();alert('50 adventurer IDs loaded.')}
 openAdminEdit(id){const h=this.db.find(x=>x.id===id);if(!h)return;document.getElementById('editHeroId').value=h.id;document.getElementById('editName').value=h.name||'';document.getElementById('editCodename').value=h.codename||'';document.getElementById('editRank').value=h.rank||'E';document.getElementById('editStatus').value=h.status||'ACTIVE';document.getElementById('editClan').value=h.clan||'';document.getElementById('editRegion').value=h.region||'';document.getElementById('editPowerIndex').value=h.powerIndex||50;document.getElementById('editNationality').value=h.nationality||'';
 const a=h.attributes||{};document.getElementById('editStr').value=a.Strength||50;document.getElementById('editSpd').value=a.Speed||50;document.getElementById('editEnd').value=a.Endurance||50;document.getElementById('editInt').value=a.Intelligence||50;document.getElementById('editEng').value=a.Energy||50;
 document.getElementById('editPowers').value=(h.powers||[]).join(', ');document.getElementById('editEquipName').value=h.equipment?.name||'';document.getElementById('editSummonName').value=h.summon?.hasSummon?h.summon.name:'';
