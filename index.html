@@ -59,6 +59,7 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <button onclick="app.navTo('landing')" class="hover:text-amber-400 text-slate-300">HQ HOME</button>
 <button onclick="app.startRegistration()" class="hover:text-amber-400 text-slate-300"><i class="fa-solid fa-id-card text-xs text-amber-400"></i> REGISTER</button>
 <button onclick="app.navTo('portals')" class="hover:text-amber-400 text-slate-300"><i class="fa-solid fa-link text-xs text-cyan-400"></i> PORTAL LINKS</button>
+<button onclick="app.navTo('guilds')" class="hover:text-amber-400 text-slate-300"><i class="fa-solid fa-users text-xs text-emerald-400"></i> GUILDS</button>
 <button onclick="app.navTo('verify')" class="hover:text-amber-400 text-slate-300">CARD VERIFY</button>
 <button onclick="app.navTo('admin')" class="text-xs px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-amber-400 font-mono"><i class="fa-solid fa-user-shield"></i> ADMIN HQ</button>
 </nav>
@@ -74,6 +75,7 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <button onclick="app.navTo('landing');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-slate-300">HQ HOME</button>
 <button onclick="app.startRegistration();app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-amber-400 font-bold">REGISTER</button>
 <button onclick="app.navTo('portals');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-cyan-300">PORTAL LINKS</button>
+<button onclick="app.navTo('guilds');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-emerald-300">GUILDS</button>
 <button onclick="app.navTo('verify');app.toggleMobileNav()" class="text-left py-2 border-b border-slate-900 text-slate-300">CARD VERIFY</button>
 <button onclick="app.navTo('admin');app.toggleMobileNav()" class="text-left py-2 text-amber-400 font-bold">ADMIN HQ</button>
 </div>
@@ -425,6 +427,32 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <div id="verifyResultContainer" class="hidden text-left pt-4 border-t border-slate-800"></div>
 </div></section>
 
+<!-- GUILDS -->
+<section id="viewGuilds" class="view-section hidden max-w-7xl mx-auto px-4 py-10 space-y-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+<div>
+<span class="text-emerald-400 font-mono text-xs font-bold tracking-widest uppercase"><i class="fa-solid fa-users"></i> GUILD REGISTRY</span>
+<h2 class="font-display font-black text-3xl text-white">GUILD COMMAND</h2>
+<p class="text-slate-400 text-sm">Manage guilds • Link registered AA IDs • Roster & treasury</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<button onclick="app.resetGuildSeed()" class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 text-xs font-mono"><i class="fa-solid fa-rotate-right"></i> RESET 15 GUILDS</button>
+<button onclick="app.openGuildModal()" class="px-5 py-2.5 rounded-xl bg-amber-500 text-black font-extrabold text-sm"><i class="fa-solid fa-plus"></i> ADD GUILD</button>
+</div>
+</div>
+<div class="glass-panel p-4 rounded-xl flex flex-col sm:flex-row gap-4 justify-between items-center">
+<div class="relative w-full sm:w-96">
+<i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-500 text-sm"></i>
+<input type="text" id="guildSearchInput" oninput="app.renderGuilds()" placeholder="Search guild, leader or member..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white font-mono focus:border-amber-400 focus:outline-none">
+</div>
+<div class="flex gap-6 text-slate-400 text-sm font-mono">
+<div>Guilds: <span id="guildCount" class="font-bold text-amber-400">0</span></div>
+<div>Members: <span id="guildMemberCount" class="font-bold text-emerald-400">0</span></div>
+</div>
+</div>
+<div id="guildsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+</section>
+
 <!-- ADMIN -->
 <section id="viewAdmin" class="view-section hidden max-w-7xl mx-auto px-4 py-10 space-y-6">
 <div class="flex flex-col sm:flex-row justify-between gap-4 border-b border-slate-800 pb-4">
@@ -554,6 +582,85 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <div class="space-y-2 max-h-48 overflow-y-auto" id="portalManagerList"></div>
 </div></div>
 
+<!-- GUILD MODAL -->
+<div id="guildModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-lg w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 id="guildModalTitle" class="font-display font-bold text-xl text-white">Add Guild</h3>
+<button onclick="app.closeGuildModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<input type="hidden" id="guildEditId">
+<input id="gName" placeholder="Guild Name *" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+<div class="grid grid-cols-2 gap-2">
+<input id="gFounder" placeholder="Owner / Founder *" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<input id="gLeader" placeholder="Guild Leader *" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<input id="gCoLeader" placeholder="Co-Leader" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-slate-200">
+<select id="gTier" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<option>EX-Rank (Mythic Order)</option><option>SSS-Rank (Supreme Empire)</option><option>SS-Rank (Grand Dominion)</option>
+<option>S-Rank (High Guild)</option><option>A-Rank (Standard Order)</option><option>B-Rank (Novice Guild)</option>
+</select>
+<select id="gLocation" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-cyan-300">
+<option>Flame Kingdom — Blazehaven</option><option>Stone Kingdom — Granitehold</option><option>Wind Kingdom — Skyreach</option>
+<option>Moon Kingdom — Lunaris</option><option>Thunder Territory — Stormhold</option><option>Leaf Land — Greenwood</option>
+<option>Ice Kingdom — Frostholm</option>
+</select>
+<input id="gSpec" placeholder="Specialization" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<input id="gTreasury" type="number" value="0" placeholder="Treasury Gold" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300 col-span-2">
+</div>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center">
+<img id="gLogoPreview" class="w-full h-full object-cover hidden"><i id="gLogoIcon" class="fa-solid fa-shield text-slate-600"></i></div>
+<input type="file" id="gLogoUpload" accept="image/*" class="text-xs text-slate-400 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+</div>
+<div class="flex justify-end gap-2"><button onclick="app.closeGuildModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="app.saveGuild()" class="px-6 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-sm">SAVE GUILD</button></div>
+</div></div>
+
+<!-- GUILD ROSTER MODAL -->
+<div id="guildRosterModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-5xl w-full glass-panel p-6 rounded-2xl border-slate-700 max-h-[90vh] flex flex-col">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 id="rosterGuildTitle" class="font-display font-bold text-xl text-white">Guild Roster</h3>
+<p id="rosterGuildSub" class="text-xs text-slate-400 font-mono">Members</p>
+</div>
+<div class="flex gap-2">
+<button onclick="app.openGuildPlayerModal()" class="px-4 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-xs"><i class="fa-solid fa-plus"></i> ADD MEMBER</button>
+<button onclick="app.closeGuildRoster()" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+</div>
+</div>
+<div id="guildRosterList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto max-h-[65vh]"></div>
+</div></div>
+
+<!-- GUILD PLAYER MODAL -->
+<div id="guildPlayerModal" class="fixed inset-0 z-[60] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+<div class="max-w-lg w-full glass-panel p-6 rounded-2xl border-slate-700 space-y-3 max-h-[90vh] overflow-y-auto">
+<div class="flex justify-between"><h3 id="gpModalTitle" class="font-display font-bold text-xl text-white">Add Member</h3>
+<button onclick="app.closeGuildPlayerModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button></div>
+<input type="hidden" id="gpEditId">
+<p class="text-[10px] font-mono text-cyan-400">Link registered AA ID (optional) — auto-fills name/rank/avatar from portal registry</p>
+<input id="gpLinkedId" placeholder="AA-2026-XXXX-XX (optional)" onchange="app.lookupAAId()" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-cyan-500/40 text-sm font-mono text-cyan-300 uppercase focus:border-cyan-400 focus:outline-none">
+<input id="gpName" placeholder="Adventurer Name *" class="w-full px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white focus:border-amber-400 focus:outline-none">
+<div class="grid grid-cols-2 gap-2">
+<select id="gpRole" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<option>Owner</option><option>Guild Leader</option><option>Co-Leader</option><option>Squad Captain</option>
+<option>Veteran</option><option>Member</option><option>Novice</option>
+</select>
+<select id="gpRank" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-amber-300">
+<option>EX</option><option>SSS</option><option>SS</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+</select>
+<input id="gpClass" placeholder="Class / Job" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white">
+<select id="gpStatus" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-emerald-300">
+<option>Active</option><option>On Quest</option><option>Resting</option><option>Retired</option>
+</select>
+<input id="gpQuests" type="number" value="0" placeholder="Quests" class="px-3 py-2.5 rounded-lg bg-slate-900 border border-slate-700 text-sm font-mono text-white col-span-2">
+</div>
+<div class="flex items-center gap-3">
+<div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center">
+<img id="gpAvatarPreview" class="w-full h-full object-cover hidden"><i id="gpAvatarIcon" class="fa-solid fa-user text-slate-600"></i></div>
+<input type="file" id="gpAvatarUpload" accept="image/*" class="text-xs text-slate-400 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-amber-500 file:text-black file:font-bold">
+</div>
+<div class="flex justify-end gap-2"><button onclick="app.closeGuildPlayerModal()" class="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-sm font-bold">Cancel</button>
+<button onclick="app.saveGuildPlayer()" class="px-6 py-2 rounded-xl bg-amber-500 text-black font-extrabold text-sm">SAVE</button></div>
+</div></div>
 
 <script>
 class SoundEngine{
@@ -626,6 +733,7 @@ this.currentView='landing';this.registrationStep=1;this.selectedAvatar='';this.s
 this.selectedPowers=[];this.customPowers=[];this.equipPhoto='';this.summonPhoto='';this.currentAdventurer=null;
 this.db=[];this.portals=[];this.dashTab='overview';this.invFilter='ALL';this.portalFilter='ALL';
 this.tempInvPhoto='';this.tempAchPhoto='';this.generatedAttributes=null;this.attrRerollSalt=0;
+this.guilds=[];this.activeGuildId=null;this.tempGuildLogo='';this.tempGuildPlayerAvatar='';
 }
 init(){
 const local=localStorage.getItem('AA_ADVENTURERS_DB_V7');
@@ -636,9 +744,13 @@ const pl=localStorage.getItem('AA_PORTALS_V7');
 if(pl){try{this.portals=JSON.parse(pl)}catch(e){this.portals=JSON.parse(JSON.stringify(DEFAULT_PORTALS))}}
 else{this.portals=JSON.parse(JSON.stringify(DEFAULT_PORTALS));this.savePortals()}
 this.currentAdventurer=this.db[1]||this.db[0];
+const gl=localStorage.getItem('AA_GUILD_SYSTEM_DB_V2');
+if(gl){try{const parsed=JSON.parse(gl);this.guilds=parsed.guilds||parsed||[]}catch(e){this.guilds=this.generateDefaultGuilds()}}
+else{this.guilds=this.generateDefaultGuilds();this.saveGuilds()}
 this.renderClanGrid();this.renderPowersGrid();this.renderAttrSliders();this.renderPortals('ALL');
 this.updateNavBadge();document.getElementById('wizardGeneratedID').innerText=this.generateID();
 this.bindUploads();document.getElementById('statTotal').innerText=this.db.length;
+this.bindGuildUploads();
 }
 stripPhotos(h){const c=JSON.parse(JSON.stringify(h));if(c.avatar&&String(c.avatar).startsWith('data:'))c.avatar='';if(c.equipment)c.equipment.photo='';if(c.summon)c.summon.photo='';(c.inventory||[]).forEach(i=>i.photo='');(c.achievements||[]).forEach(a=>a.photo='');return c}
 saveDB(){try{localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(this.db));return true}catch(e){if(e&&(e.name==='QuotaExceededError'||e.code===22)){const s=this.db.map(h=>this.stripPhotos(h));try{localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(s));this.db=s;return true}catch(e2){try{const slim=s.slice(0,8);localStorage.setItem('AA_ADVENTURERS_DB_V7',JSON.stringify(slim));this.db=slim;return true}catch(e3){return false}}}return false}}
@@ -683,7 +795,7 @@ else if(step===6)this.compressImage(file,d=>this.applyImage('summon',d));
 }
 });
 }
-navTo(v){soundEngine.playClick();document.querySelectorAll('.view-section').forEach(s=>s.classList.add('hidden'));const t=document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1));if(t)t.classList.remove('hidden');this.currentView=v;scrollTo({top:0,behavior:'smooth'});if(v==='dashboard')this.renderDashboard();if(v==='card')this.renderCard();if(v==='admin')this.renderAdmin();if(v==='portals')this.renderPortals(this.portalFilter)}
+navTo(v){soundEngine.playClick();document.querySelectorAll('.view-section').forEach(s=>s.classList.add('hidden'));const t=document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1));if(t)t.classList.remove('hidden');this.currentView=v;scrollTo({top:0,behavior:'smooth'});if(v==='dashboard')this.renderDashboard();if(v==='card')this.renderCard();if(v==='admin')this.renderAdmin();if(v==='portals')this.renderPortals(this.portalFilter);if(v==='guilds')this.renderGuilds()}
 toggleSound(){soundEngine.muted=!soundEngine.muted;document.getElementById('soundIcon').className=soundEngine.muted?'fa-solid fa-volume-xmark text-rose-400':'fa-solid fa-volume-high text-amber-400'}
 toggleMobileNav(){document.getElementById('mobileNav').classList.toggle('hidden')}
 startRegistration(){this.registrationStep=1;this.selectedPowers=[];this.customPowers=[];this.selectedAvatar='';this.equipPhoto='';this.summonPhoto='';this.generatedAttributes=null;this.attrRerollSalt=0;['avatarPreview','equipPreview','summonPreview'].forEach(id=>document.getElementById(id).classList.add('hidden'));['avatarPlaceholder','equipPlaceholder','summonPlaceholder'].forEach(id=>document.getElementById(id).classList.remove('hidden'));['avatarUpload','equipUpload','summonUpload'].forEach(id=>document.getElementById(id).value='');['avatarDropZone','equipDropZone','summonDropZone'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('has-image','dragover')});['avatarClearBtn','equipClearBtn','summonClearBtn'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.add('hidden')});this.updateWizardStepUI();document.getElementById('wizardGeneratedID').innerText=this.generateID();this.navTo('register')}
@@ -922,6 +1034,128 @@ document.getElementById('adminTableBody').innerHTML=this.db.map(h=>{const st=h.s
 <button onclick="app.setCardStatus('${h.id}','BLOCKED')" class="px-2 py-1 rounded bg-rose-950 border border-rose-500/40 text-rose-400 text-[10px] font-bold">BLK</button>
 <button onclick="app.deleteAdventurer('${h.id}')" class="px-2 py-1 rounded bg-rose-900/40 text-rose-400 text-[10px]"><i class="fa-solid fa-trash"></i></button>
 </div></td></tr>`}).join('')}
+/* ========== GUILD SYSTEM ========== */
+saveGuilds(){try{localStorage.setItem('AA_GUILD_SYSTEM_DB_V2',JSON.stringify({guilds:this.guilds}))}catch(e){}}
+generateDefaultGuilds(){
+const templates=[
+{name:'Celestial Dominion',spec:'God-Tier Cosmic Raids',loc:'Moon Kingdom — Lunaris',tier:'EX-Rank (Mythic Order)',gold:9500000},
+{name:'Shadow Syndicate',spec:'Assassination & Stealth',loc:'Flame Kingdom — Blazehaven',tier:'EX-Rank (Mythic Order)',gold:8200000},
+{name:'Phoenix Order',spec:'Flame Magic & Defense',loc:'Flame Kingdom — Blazehaven',tier:'SSS-Rank (Supreme Empire)',gold:5800000},
+{name:'Dragon Slayers',spec:'Ancient Wyrm Hunts',loc:'Stone Kingdom — Granitehold',tier:'SSS-Rank (Supreme Empire)',gold:4900000},
+{name:'Arcane High Council',spec:'Forbidden Magic Research',loc:'Wind Kingdom — Skyreach',tier:'SSS-Rank (Supreme Empire)',gold:6200000},
+{name:'Crimson Vanguard',spec:'Frontline Conquest',loc:'Thunder Territory — Stormhold',tier:'SS-Rank (Grand Dominion)',gold:3400000},
+{name:'Valkyrie Brigade',spec:'Aerial Recon & Healing',loc:'Wind Kingdom — Skyreach',tier:'SS-Rank (Grand Dominion)',gold:3100000},
+{name:'Leviathan Raiders',spec:'Abyssal Expeditions',loc:'Ice Kingdom — Frostholm',tier:'SS-Rank (Grand Dominion)',gold:2900000},
+{name:'Astral Knights',spec:'Dimensional Gate Guard',loc:'Moon Kingdom — Lunaris',tier:'S-Rank (High Guild)',gold:2100000},
+{name:'Eclipse Order',spec:'Curse Breaking & Dark Arts',loc:'Leaf Land — Greenwood',tier:'S-Rank (High Guild)',gold:2400000},
+{name:'Iron Bastion',spec:'Heavy Armored Siege',loc:'Stone Kingdom — Granitehold',tier:'S-Rank (High Guild)',gold:1850000},
+{name:'Mythic Covenant',spec:'Relic Hunting & Dungeons',loc:'Leaf Land — Greenwood',tier:'A-Rank (Standard Order)',gold:1450000},
+{name:'Sunfire Templars',spec:'Holy Exorcism',loc:'Flame Kingdom — Blazehaven',tier:'A-Rank (Standard Order)',gold:1300000},
+{name:'Nether Spire',spec:'Void Dungeon Exploration',loc:'Ice Kingdom — Frostholm',tier:'A-Rank (Standard Order)',gold:1200000},
+{name:'Frostfang Battalion',spec:'Glacial Beast Taming',loc:'Ice Kingdom — Frostholm',tier:'B-Rank (Novice Guild)',gold:950000}
+];
+const fn=['Kaelen','Ignis','Arthur','Lyra','Valerius','Zephyr','Seraphina','Drakon','Elysia','Varian','Cassian','Thorne','Freya','Gideon','Sylvia','Rowan','Aurelius','Morrigan','Lucius','Nico'];
+const ln=['Vance','Pendragon','Blackwood','Stormbringer','Nightshade','Ironheart','Frost','Silverwing','Bloodraven','Valerie','Shadowfang','Duskwalker','Ember','Lightbringer','Voidwalker'];
+const classes=['Swordsman','Paladin','Archmage','Necromancer','Shadow Assassin','Dragon Knight','High Priest','Ranger','Berserker','Summoner','Alchemist','Elementalist','Spellblade','Beast Master'];
+const ranks=['EX','SSS','SS','S','A','B','C','D'];
+return templates.map((gt,gIdx)=>{
+const players=[];
+for(let i=1;i<=20;i++){
+let role='Member',rank=ranks[Math.floor(Math.random()*4)+3];
+if(i===1){role='Guild Leader';rank=gt.tier.includes('EX')?'EX':'SSS'}
+else if(i===2){role='Co-Leader';rank=gt.tier.includes('EX')?'SSS':'SS'}
+else if(i<=5){role='Squad Captain';rank='SS'}
+else if(i<=10){role='Veteran';rank='S'}
+else if(i>=18){role='Novice';rank='D'}
+players.push({id:`p_${gIdx}_${i}`,name:`${fn[(gIdx+i)%fn.length]} ${ln[(i*3)%ln.length]}`,role,rank,class:classes[(i+gIdx)%classes.length],status:i%4===0?'On Quest':(i%7===0?'Resting':'Active'),quests:Math.floor(Math.random()*150)+10,avatar:'',linkedId:''});
+}
+return{id:`g_${gIdx+1}`,name:gt.name,founder:`${fn[gIdx%fn.length]} ${ln[gIdx%ln.length]}`,leader:`${fn[(gIdx+1)%fn.length]} ${ln[(gIdx+2)%ln.length]}`,coLeader:`${fn[(gIdx+3)%fn.length]} ${ln[(gIdx+4)%ln.length]}`,tier:gt.tier,location:gt.loc,spec:gt.spec,treasury:gt.gold,logo:'',players};
+});
+}
+resetGuildSeed(){if(!confirm('Reset to 15 default guilds (300 members)?'))return;this.guilds=this.generateDefaultGuilds();this.saveGuilds();this.renderGuilds();soundEngine.playSparkle()}
+bindGuildUploads(){
+const gLogo=document.getElementById('gLogoUpload');
+if(gLogo)gLogo.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempGuildLogo=d;document.getElementById('gLogoPreview').src=d;document.getElementById('gLogoPreview').classList.remove('hidden');document.getElementById('gLogoIcon').classList.add('hidden')})});
+const gpAv=document.getElementById('gpAvatarUpload');
+if(gpAv)gpAv.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;this.compressImage(f,d=>{this.tempGuildPlayerAvatar=d;document.getElementById('gpAvatarPreview').src=d;document.getElementById('gpAvatarPreview').classList.remove('hidden');document.getElementById('gpAvatarIcon').classList.add('hidden')})});
+}
+renderGuilds(){
+const grid=document.getElementById('guildsGrid');if(!grid)return;
+const search=(document.getElementById('guildSearchInput')?.value||'').toLowerCase();
+let totalM=0;
+const filtered=this.guilds.filter(g=>{totalM+= (g.players||[]).length;return !search||g.name.toLowerCase().includes(search)||(g.leader||'').toLowerCase().includes(search)||(g.players||[]).some(p=>(p.name||'').toLowerCase().includes(search))});
+document.getElementById('guildCount').innerText=filtered.length;
+document.getElementById('guildMemberCount').innerText=totalM;
+grid.innerHTML=filtered.map(g=>{
+const defLogo=`https://ui-avatars.com/api/?name=${encodeURIComponent(g.name)}&background=d97706&color=fff`;
+let tierCls='bg-amber-500/20 text-amber-400 border border-amber-500/30';
+if((g.tier||'').includes('EX'))tierCls='bg-gradient-to-r from-purple-600 to-pink-500 text-white border border-pink-400';
+else if((g.tier||'').includes('SSS'))tierCls='bg-gradient-to-r from-red-600 to-purple-600 text-white border border-red-400';
+return`<div class="glass-panel p-5 rounded-2xl border-slate-800 hover:border-amber-500/40 transition space-y-3">
+<div class="flex items-center gap-3">
+<img src="${g.logo||defLogo}" class="w-14 h-14 rounded-xl object-cover border border-amber-500/40">
+<div><h3 class="font-bold text-white text-lg leading-tight">${this.esc(g.name)}</h3>
+<span class="text-[10px] px-2 py-0.5 rounded-full font-semibold inline-block mt-1 ${tierCls}">${this.esc(g.tier||'')}</span></div></div>
+<div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs font-mono">
+<div class="flex justify-between"><span class="text-slate-500">Owner</span><span class="text-amber-200">${this.esc(g.founder)}</span></div>
+<div class="flex justify-between"><span class="text-slate-500">Leader</span><span class="text-amber-300">${this.esc(g.leader)}</span></div>
+<div class="flex justify-between"><span class="text-slate-500">Co-Leader</span><span class="text-slate-200">${this.esc(g.coLeader||'None')}</span></div>
+<div class="flex justify-between"><span class="text-slate-500">Base</span><span class="text-cyan-300">${this.esc(g.location||'')}</span></div>
+<div class="flex justify-between"><span class="text-slate-500">Treasury</span><span class="text-amber-400 font-bold"><i class="fa-solid fa-coins"></i> ${(g.treasury||0).toLocaleString()} G</span></div>
+</div>
+<div class="flex justify-between items-center text-xs text-slate-400 font-mono"><span>Roster: <strong class="text-white">${(g.players||[]).length}</strong></span><span class="text-slate-500">${this.esc(g.spec||'')}</span></div>
+<div class="flex gap-2">
+<button onclick="app.openGuildRoster('${g.id}')" class="flex-1 py-2 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold hover:bg-amber-500 hover:text-black transition"><i class="fa-solid fa-users"></i> ROSTER</button>
+<button onclick="app.editGuild('${g.id}')" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs"><i class="fa-solid fa-pen"></i></button>
+<button onclick="app.deleteGuild('${g.id}')" class="px-3 py-2 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+</div></div>`}).join('')||'<p class="text-slate-500 font-mono text-sm col-span-3 text-center py-10">No guilds found.</p>';
+}
+openGuildModal(edit){this.tempGuildLogo='';document.getElementById('gLogoPreview').classList.add('hidden');document.getElementById('gLogoIcon').classList.remove('hidden');document.getElementById('gLogoUpload').value='';
+if(!edit){document.getElementById('guildEditId').value='';document.getElementById('gName').value='';document.getElementById('gFounder').value='';document.getElementById('gLeader').value='';document.getElementById('gCoLeader').value='';document.getElementById('gTier').value='S-Rank (High Guild)';document.getElementById('gLocation').value='Flame Kingdom — Blazehaven';document.getElementById('gSpec').value='';document.getElementById('gTreasury').value=0;document.getElementById('guildModalTitle').innerText='Add Guild'}
+document.getElementById('guildModal').classList.remove('hidden')}
+closeGuildModal(){document.getElementById('guildModal').classList.add('hidden')}
+editGuild(id){const g=this.guilds.find(x=>x.id===id);if(!g)return;document.getElementById('guildEditId').value=g.id;document.getElementById('gName').value=g.name;document.getElementById('gFounder').value=g.founder;document.getElementById('gLeader').value=g.leader;document.getElementById('gCoLeader').value=g.coLeader||'';document.getElementById('gTier').value=g.tier;document.getElementById('gLocation').value=g.location||'Flame Kingdom — Blazehaven';document.getElementById('gSpec').value=g.spec||'';document.getElementById('gTreasury').value=g.treasury||0;if(g.logo){this.tempGuildLogo=g.logo;document.getElementById('gLogoPreview').src=g.logo;document.getElementById('gLogoPreview').classList.remove('hidden');document.getElementById('gLogoIcon').classList.add('hidden')}document.getElementById('guildModalTitle').innerText='Edit Guild';this.openGuildModal(true)}
+saveGuild(){const name=document.getElementById('gName').value.trim(),founder=document.getElementById('gFounder').value.trim(),leader=document.getElementById('gLeader').value.trim();if(!name||!founder||!leader){alert('Name, Founder & Leader required');return}
+const id=document.getElementById('guildEditId').value||('g_'+Date.now());const idx=this.guilds.findIndex(g=>g.id===id);
+const obj={id,name,founder,leader,coLeader:document.getElementById('gCoLeader').value.trim(),tier:document.getElementById('gTier').value,location:document.getElementById('gLocation').value,spec:document.getElementById('gSpec').value.trim(),treasury:+document.getElementById('gTreasury').value||0,logo:this.tempGuildLogo||(idx>=0?this.guilds[idx].logo:''),players:idx>=0?this.guilds[idx].players:[]};
+if(idx>=0)this.guilds[idx]=obj;else this.guilds.push(obj);this.saveGuilds();this.closeGuildModal();this.renderGuilds();soundEngine.playSparkle()}
+deleteGuild(id){if(!confirm('Disband this guild?'))return;this.guilds=this.guilds.filter(g=>g.id!==id);this.saveGuilds();this.renderGuilds()}
+openGuildRoster(id){this.activeGuildId=id;const g=this.guilds.find(x=>x.id===id);if(!g)return;document.getElementById('rosterGuildTitle').innerText=g.name;document.getElementById('rosterGuildSub').innerText=`${(g.players||[]).length} members • ${g.location||''}`;this.renderGuildRoster();document.getElementById('guildRosterModal').classList.remove('hidden')}
+closeGuildRoster(){document.getElementById('guildRosterModal').classList.add('hidden')}
+renderGuildRoster(){const g=this.guilds.find(x=>x.id===this.activeGuildId);if(!g)return;const list=document.getElementById('guildRosterList');
+if(!(g.players||[]).length){list.innerHTML='<p class="text-slate-500 font-mono text-sm col-span-3 text-center py-8">No members yet.</p>';return}
+list.innerHTML=g.players.map(p=>{
+const av=p.avatar||`https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=1e293b&color=fff`;
+const linked=p.linkedId?`<span class="text-[9px] font-mono text-cyan-400">${p.linkedId}</span>`:'';
+return`<div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between gap-2">
+<div class="flex items-center gap-3 min-w-0"><img src="${av}" class="w-10 h-10 rounded-full object-cover border border-amber-500/30 flex-shrink-0">
+<div class="min-w-0"><div class="flex items-center gap-1.5 flex-wrap"><h4 class="font-bold text-white text-xs truncate">${this.esc(p.name)}</h4>
+<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">${this.esc(p.rank)}</span></div>
+<p class="text-[10px] text-slate-400 truncate">${this.esc(p.role)} • ${this.esc(p.class||'—')}</p>
+<p class="text-[10px] text-slate-500">Q:${p.quests||0} • ${this.esc(p.status||'Active')} ${linked}</p></div></div>
+<div class="flex gap-1 flex-shrink-0">
+${p.linkedId?`<button onclick="app.loadCardByID('${p.linkedId}')" class="text-cyan-400 hover:text-cyan-300 p-1 text-xs" title="View AA Card"><i class="fa-solid fa-id-card"></i></button>`:''}
+<button onclick="app.editGuildPlayer('${p.id}')" class="text-slate-400 hover:text-amber-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+<button onclick="app.deleteGuildPlayer('${p.id}')" class="text-slate-400 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+</div></div>`}).join('')}
+openGuildPlayerModal(edit){this.tempGuildPlayerAvatar='';document.getElementById('gpAvatarPreview').classList.add('hidden');document.getElementById('gpAvatarIcon').classList.remove('hidden');document.getElementById('gpAvatarUpload').value='';
+if(!edit){document.getElementById('gpEditId').value='';document.getElementById('gpLinkedId').value='';document.getElementById('gpName').value='';document.getElementById('gpRole').value='Member';document.getElementById('gpRank').value='B';document.getElementById('gpClass').value='';document.getElementById('gpStatus').value='Active';document.getElementById('gpQuests').value=0;document.getElementById('gpModalTitle').innerText='Add Member'}
+document.getElementById('guildPlayerModal').classList.remove('hidden')}
+closeGuildPlayerModal(){document.getElementById('guildPlayerModal').classList.add('hidden')}
+lookupAAId(){const id=(document.getElementById('gpLinkedId').value||'').trim().toUpperCase();if(!id)return;const h=this.db.find(x=>x.id.toUpperCase()===id);if(!h){alert('AA ID not found in registry');return}
+document.getElementById('gpName').value=h.name;document.getElementById('gpRank').value=h.rank||'B';
+if(h.avatar){this.tempGuildPlayerAvatar=h.avatar;document.getElementById('gpAvatarPreview').src=h.avatar;document.getElementById('gpAvatarPreview').classList.remove('hidden');document.getElementById('gpAvatarIcon').classList.add('hidden')}
+soundEngine.playSelect()}
+editGuildPlayer(pid){const g=this.guilds.find(x=>x.id===this.activeGuildId);if(!g)return;const p=(g.players||[]).find(x=>x.id===pid);if(!p)return;
+document.getElementById('gpEditId').value=p.id;document.getElementById('gpLinkedId').value=p.linkedId||'';document.getElementById('gpName').value=p.name;document.getElementById('gpRole').value=p.role;document.getElementById('gpRank').value=p.rank;document.getElementById('gpClass').value=p.class||'';document.getElementById('gpStatus').value=p.status||'Active';document.getElementById('gpQuests').value=p.quests||0;
+if(p.avatar){this.tempGuildPlayerAvatar=p.avatar;document.getElementById('gpAvatarPreview').src=p.avatar;document.getElementById('gpAvatarPreview').classList.remove('hidden');document.getElementById('gpAvatarIcon').classList.add('hidden')}
+document.getElementById('gpModalTitle').innerText='Edit Member';this.openGuildPlayerModal(true)}
+saveGuildPlayer(){const g=this.guilds.find(x=>x.id===this.activeGuildId);if(!g)return;const name=document.getElementById('gpName').value.trim();if(!name){alert('Name required');return}
+if(!g.players)g.players=[];const editId=document.getElementById('gpEditId').value;
+const obj={id:editId||('p_'+Date.now()),name,role:document.getElementById('gpRole').value,rank:document.getElementById('gpRank').value,class:document.getElementById('gpClass').value.trim(),status:document.getElementById('gpStatus').value,quests:+document.getElementById('gpQuests').value||0,avatar:this.tempGuildPlayerAvatar||'',linkedId:(document.getElementById('gpLinkedId').value||'').trim().toUpperCase()};
+if(editId){const i=g.players.findIndex(x=>x.id===editId);if(i>=0)g.players[i]=obj}else g.players.push(obj);
+this.saveGuilds();this.closeGuildPlayerModal();this.renderGuildRoster();this.renderGuilds();soundEngine.playSparkle()}
+deleteGuildPlayer(pid){const g=this.guilds.find(x=>x.id===this.activeGuildId);if(!g)return;if(!confirm('Remove member?'))return;g.players=(g.players||[]).filter(p=>p.id!==pid);this.saveGuilds();this.renderGuildRoster();this.renderGuilds()}
 }
 const app=new AppController();
 window.addEventListener('DOMContentLoaded',()=>app.init());
