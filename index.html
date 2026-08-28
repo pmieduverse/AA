@@ -127,13 +127,16 @@ body{background:#05070a;color:#e2e8f0;font-family:Rajdhani,sans-serif;overflow-x
 <div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Codename *</label><input id="regCodename" type="text" placeholder="Shadow Vanguard" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-300 font-mono text-sm font-bold focus:border-amber-400 focus:outline-none"></div>
 <div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">DOB</label><input id="regDOB" type="date" value="2002-05-14" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
 <div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Gender</label><select id="regGender" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"><option>Male</option><option>Female</option><option>Non-Binary</option><option>Unspecified</option></select></div>
-<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Nationality</label><input id="regNationality" type="text" value="Valorian Republic" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
+<div><label class="block text-xs font-mono text-slate-400 mb-1 uppercase">Nationality</label><input id="regNationality" type="text" value="Flameborn" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 font-mono text-sm focus:border-amber-400 focus:outline-none"></div>
 <div><label class="block text-xs font-mono text-amber-400 mb-1 uppercase font-bold">Region (7 Kingdoms) *</label>
 <select id="regRegion" class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 font-mono text-sm focus:border-amber-400 focus:outline-none">
-<option>Kingdom 1 — Flame Kingdom</option><option>Kingdom 2 — Wind Kingdom</option>
-<option>Kingdom 3 — Leaf Kingdom</option><option>Kingdom 4 — Thunder Kingdom</option>
-<option>Kingdom 5 — Ice Kingdom</option><option>Kingdom 6 — Stone Kingdom</option>
-<option>Kingdom 7 — Moon Kingdom</option>
+<option>Flame Kingdom — Blazehaven</option>
+<option>Stone Kingdom — Granitehold</option>
+<option>Wind Kingdom — Skyreach</option>
+<option>Moon Kingdom — Lunaris</option>
+<option>Thunder Territory — Stormhold</option>
+<option>Leaf Land — Greenwood</option>
+<option>Ice Kingdom — Frostholm</option>
 </select></div></div>
 <div><label class="block text-xs font-mono text-slate-400 mb-2 uppercase">Profile Photo * <span class="text-amber-400/70 normal-case">(Browse / Drag-Drop / Ctrl+V Paste)</span></label>
 <div id="avatarDropZone" class="drop-zone p-4 flex flex-col sm:flex-row items-center gap-4">
@@ -598,8 +601,8 @@ const DEFAULT_PORTALS=[
 {id:'p6',title:'Gear Database',desc:'Weapons & relics catalog.',url:'https://example.com/gear',category:'Tools',icon:'fa-shield-halved'}
 ];
 const SEED_HEROES=[{
-id:'AA-2026-EX99-AP',name:'Aurelia Sunforge',codename:'The Radiant Empress',dob:'1998-11-03',gender:'Female',nationality:'Celestial Heights',
-region:'Kingdom 6 — Zephyr (Celestial Sky)',avatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
+id:'AA-2026-EX99-AP',name:'Aurelia Sunforge',codename:'The Radiant Empress',dob:'1998-11-03',gender:'Female',nationality:'Moonborn',
+region:'Moon Kingdom — Lunaris',avatar:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80',
 clan:'Celestial Clan',attributes:{Strength:92,Speed:96,Endurance:90,Intelligence:98,Energy:99},powers:['Light','Time','Dragon'],
 powerIndex:99,rank:'EX',status:'ACTIVE',equipment:{name:'Aegis Solar Blade',desc:'Divine broadsword.',photo:''},
 summon:{hasSummon:true,name:'Starlight Pegasus',desc:'Sacred steed.',photo:''},
@@ -607,14 +610,14 @@ awakenedAbility:{name:'SOLAR CHRONO CATASTROPHE',desc:'Holy + Temporal absolute 
 inventory:[{id:'inv1',name:'Solar Elixir',type:'Potion',desc:'Full restore.',qty:3,rarity:'Epic',photo:''},{id:'inv2',name:'Aegis Solar Blade',type:'Weapon',desc:'Primary divine weapon.',qty:1,rarity:'Mythic',photo:''}],
 achievements:[{id:'ach1',title:'Radiant Empress Ascension',desc:'Reached EX Rank.',date:'2025-06-12',rarity:'Mythic',photo:''},{id:'ach2',title:'Void Rift Sealed',desc:'Closed class-EX tear alone.',date:'2024-11-03',rarity:'Legendary',photo:''}]
 },{
-id:'AA-2026-7X92-KP',name:'Kaelen Vance',codename:'Shadow Vanguard',dob:'2001-08-19',gender:'Male',nationality:'Valorian Republic',
-region:'Kingdom 1 — Valoria (High Citadel)',avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+id:'AA-2026-7X92-KP',name:'Kaelen Vance',codename:'Shadow Vanguard',dob:'2001-08-19',gender:'Male',nationality:'Flameborn',
+region:'Flame Kingdom — Blazehaven',avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
 clan:'Shadow Clan',attributes:{Strength:82,Speed:91,Endurance:74,Intelligence:84,Energy:95},powers:['Shadow','Blood','Demon'],
 powerIndex:88,rank:'SS',status:'ACTIVE',equipment:{name:'Abyssal Daggers',desc:'Twin shadow blades.',photo:''},
 summon:{hasSummon:true,name:'Shadow Fenrir',desc:'Void wolf.',photo:''},
 awakenedAbility:{name:'ABYSSAL BLOOD ART',desc:'Umbral drain empower speed.',rarity:'EPIC'},
 inventory:[{id:'inv3',name:'Shadowstep Boots',type:'Armor',desc:'Blink in darkness.',qty:1,rarity:'Rare',photo:''},{id:'inv4',name:'Lesser Healing Potion',type:'Potion',desc:'Moderate HP restore.',qty:12,rarity:'Common',photo:''},{id:'inv5',name:'Abyssal Daggers',type:'Weapon',desc:'Twin blades.',qty:1,rarity:'Legendary',photo:''}],
-achievements:[{id:'ach3',title:'First Blood Contract',desc:'Bound Shadow Fenrir.',date:'2023-02-14',rarity:'Epic',photo:''},{id:'ach4',title:'Night of a Thousand Blades',desc:'Cleared Umbra crypt solo.',date:'2024-08-19',rarity:'Rare',photo:''}]
+achievements:[{id:'ach3',title:'First Blood Contract',desc:'Bound Shadow Fenrir.',date:'2023-02-14',rarity:'Epic',photo:''},{id:'ach4',title:'Night of a Thousand Blades',desc:'Cleared Flame crypt solo.',date:'2024-08-19',rarity:'Rare',photo:''}]
 }];
 
 class AppController{
